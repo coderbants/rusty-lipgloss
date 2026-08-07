@@ -1,0 +1,15 @@
+[package]
+name = "charming-lipgloss"
+version = "2.0.5"
+edition = "2021"
+description = "Cleanroom Rust port of Charmbracelet's Lip Gloss (v2.0.5) terminal styling library"
+license = "MIT"
+
+[dependencies]
+unicode-segmentation = "1.10.1"
+
+[dev-dependencies]
+
+[lib]
+name = "charming_lipgloss"
+path = "src/lib.rs"
