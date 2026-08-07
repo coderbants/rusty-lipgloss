@@ -1,6 +1,20 @@
 # Charming Lip Gloss (`charming-lipgloss`)
 
-A 1:1 cleanroom Rust port of Charmbracelet's upstream Go [`lipgloss`](https://github.com/charmbracelet/lipgloss) library (pinned to release **`v2.0.5`**).
+> [!NOTE]  
+> This library is a cleanroom Rust port of Charmbracelet's upstream Go [Lip Gloss (`charmbracelet/lipgloss`)](https://github.com/charmbracelet/lipgloss) terminal styling library.
+
+<p>
+    <img src="https://stuff.charm.sh/lipgloss/lipgloss-title-treatment.png" width="313" alt="Lip Gloss Title Treatment"><br>
+    <a href="https://github.com/charmbracelet/lipgloss/releases"><img src="https://img.shields.io/github/release/charmbracelet/lipgloss.svg" alt="Latest Release"></a>
+    <a href="https://pkg.go.dev/github.com/charmbracelet/lipgloss?tab=doc"><img src="https://godoc.org/github.com/charmbracelet/lipgloss?status.svg" alt="GoDoc"></a>
+    <a href="https://github.com/charmbracelet/lipgloss/actions"><img src="https://github.com/charmbracelet/lipgloss/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
+</p>
+
+Style, format and layout tools for terminal applications. Built for Rust based on upstream [charmbracelet/lipgloss](https://github.com/charmbracelet/lipgloss).
+
+<p>
+    <img src="https://stuff.charm.sh/lipgloss/lipgloss-example.gif" width="100%" alt="Lip Gloss Example">
+</p>
 
 ## Overview
 
@@ -25,3 +39,7 @@ let style = Style::new()
 
 println!("{}", style.render("Hello Charming Lipgloss!"));
 ```
+
+## License
+
+[MIT](LICENSE)
