@@ -1,14 +1,14 @@
-# Charming Lip Gloss Development Guidelines
+# Agent Instructions for `charming-lipgloss`
 
-Read the parent workspace `AGENTS.md` first for Rust standards, process routing, documentation requirements, and borrowing rules.
+> [!IMPORTANT]
+> **Subsequent Cycle Requirement**: On every development cycle, before doing any work, the agent MUST inspect [`UPSTREAM_MAPPING.md`](file:///Users/jonny/Projects/charming/charming-lipgloss/UPSTREAM_MAPPING.md) to verify that all upstream Go files and examples are accounted for. When adding, modifying, or refactoring files, the agent MUST update [`UPSTREAM_MAPPING.md`](file:///Users/jonny/Projects/charming/charming-lipgloss/UPSTREAM_MAPPING.md) to reflect the current state.
 
-## Repository Purpose
-
-`charming-lipgloss` is a 1:1 cleanroom Rust port of Charmbracelet's upstream Go `charmbracelet/lipgloss` library (pinned to release **`v2.0.5`**).
-
-## Key Invariants
-
-1. **Structural Parity**: Keep module and type structure direct 1:1 with upstream Go declarations so that `git diff` porting from Go release tags remains mechanical and straightforward.
-2. **Borrowing Discipline**: Strongly favor borrowing (`&str`, `&[T]`) over reference counting (`Arc`, `Rc`). Any introduction of `Arc`/`Rc` requires explicit documented technical justification proving borrowing was impossible.
-3. **Zero Unsafe**: `#![deny(unsafe_code)]` is enforced across all modules. Zero `.unwrap()` / `.expect()` in library paths.
-4. **100% Test Parity**: All upstream Go test cases in `*_test.go` files must be ported 1:1 to Rust `tests/*.rs`.
+## Core Rules & Workflow
+1. Refer to the workspace-level rule in [`/Users/jonny/Projects/charming/AGENTS.md`](file:///Users/jonny/Projects/charming/AGENTS.md).
+2. Maintain 100% rustdoc documentation.
+3. Every ported file MUST include the guiding comment header:
+   ```rust
+   //! Cleanroom Rust port of upstream Go source file: `<upstream-go-filepath>`
+   //! Upstream Target Tag / Version: `v2.0.5`
+   ```
+4. Verify all tests pass with `cargo test --all-targets` before committing.
