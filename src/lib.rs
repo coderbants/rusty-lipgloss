@@ -7,10 +7,12 @@
 #![deny(unsafe_code)]
 
 pub mod align;
+pub mod blending;
 pub mod border;
 pub mod color;
 pub mod join;
 pub mod list;
+pub mod position;
 pub mod size;
 pub mod style;
 pub mod table;
@@ -18,11 +20,14 @@ pub mod tree;
 pub mod whitespace;
 
 pub use align::Position;
+pub use blending::{blend_1d, blend_2d};
 pub use border::Border;
 pub use color::{AdaptiveColor, Color, CompleteColor, TerminalColor};
 pub use list::List;
+pub use position::{place, place_horizontal, place_vertical};
 pub use style::Style;
 pub use table::Table;
 pub use tree::Tree;
+
 
 
