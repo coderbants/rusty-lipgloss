@@ -67,7 +67,7 @@ fn main() {
     // A compositor takes multiple layers and composites them together into
     // a single output.
     let layers = vec![lighter, darker];
-    let comp = new_compositor(&layers);
+    let mut comp = new_compositor(&layers);
 
     println(&comp.render()).unwrap();
     let _ = &Layer::new;

@@ -6,6 +6,9 @@ description = "Cleanroom Rust port of Charmbracelet's Lip Gloss (v2.0.5) termina
 license = "MIT"
 
 [dependencies]
+charming-colorprofile = { path = "../charming-colorprofile" }
+charming-ultraviolet = { path = "../charming-ultraviolet" }
+charming-x-ansi = { path = "../charming-x-ansi" }
 unicode-segmentation = "1.10.1"
 unicode-width = "0.1"
 libc = "0.2"

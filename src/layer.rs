@@ -7,55 +7,8 @@
 
 use std::collections::HashMap;
 
-use crate::canvas::Drawable;
 use crate::size;
-
-/// A simple rectangle.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Rectangle {
-    /// The minimum corner (x, y).
-    pub min: (usize, usize),
-    /// The maximum corner (x, y).
-    pub max: (usize, usize),
-}
-
-impl Default for Rectangle {
-    fn default() -> Self {
-        Rectangle {
-            min: (0, 0),
-            max: (0, 0),
-        }
-    }
-}
-
-impl Rectangle {
-    /// Returns the width of the rectangle.
-    pub fn dx(&self) -> usize {
-        self.max.0.saturating_sub(self.min.0)
-    }
-    /// Returns the height of the rectangle.
-    pub fn dy(&self) -> usize {
-        self.max.1.saturating_sub(self.min.1)
-    }
-    /// Returns the union of this rectangle with another.
-    pub fn union(&self, other: Rectangle) -> Rectangle {
-        Rectangle {
-            min: (self.min.0.min(other.min.0), self.min.1.min(other.min.1)),
-            max: (self.max.0.max(other.max.0), self.max.1.max(other.max.1)),
-        }
-    }
-    /// Returns whether the point is inside the rectangle.
-    pub fn contains(&self, x: usize, y: usize) -> bool {
-        x >= self.min.0 && x < self.max.0 && y >= self.min.1 && y < self.max.1
-    }
-    /// Returns whether this rectangle overlaps another.
-    pub fn overlaps(&self, other: &Rectangle) -> bool {
-        self.min.0 < other.max.0
-            && other.min.0 < self.max.0
-            && self.min.1 < other.max.1
-            && other.min.1 < self.max.1
-    }
-}
+use charming_ultraviolet::{Drawable, Rectangle, Screen};
 
 /// <upstream-comment>Layer represents a visual layer with content and positioning. It's a pure
 /// data structure that defines the layer hierarchy without any computation.</upstream-comment>
@@ -188,6 +141,13 @@ impl Layer {
         max_z
     }
 
+    /// Draw draws the content of the layer on the screen at the specified
+    /// area.
+    pub fn draw(&self, scr: &mut dyn Screen, area: Rectangle) {
+        let content = charming_ultraviolet::new_styled_string(&self.content);
+        content.draw(scr, area);
+    }
+
     /// boundsWithOffset calculates bounds with parent offset applied.
     pub(crate) fn bounds_with_offset(&self, parent_x: isize, parent_y: isize) -> Rectangle {
         let abs_x = self.x + parent_x;
@@ -203,7 +163,8 @@ impl Layer {
         };
 
         for child in &self.layers {
-            bounds = bounds.union(child.bounds_with_offset(abs_x, abs_y));
+            let cb = child.bounds_with_offset(abs_x, abs_y);
+            bounds = bounds.union(&cb);
         }
 
         bounds
@@ -211,11 +172,24 @@ impl Layer {
 }
 
 /// LayerHit represents the result of a hit test on a [Layer].
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct LayerHit {
     id: String,
     layer: Option<Layer>,
     bounds: Rectangle,
+}
+
+impl Default for LayerHit {
+    fn default() -> Self {
+        LayerHit {
+            id: String::new(),
+            layer: None,
+            bounds: Rectangle {
+                min: (0, 0),
+                max: (0, 0),
+            },
+        }
+    }
 }
 
 impl LayerHit {
@@ -339,7 +313,7 @@ impl Compositor {
         if let Some(first) = self.layers.first() {
             let mut bounds = first.bounds;
             for cl in self.layers.iter().skip(1) {
-                bounds = bounds.union(cl.bounds);
+                bounds = bounds.union(&cl.bounds);
             }
             self.bounds = bounds;
         }
@@ -385,19 +359,27 @@ impl Compositor {
     /// <upstream-comment>Render renders the compositor into a styled string. This is a helper
     /// function that creates a temporary canvas, draws the compositor onto it, and
     /// returns the resulting string.</upstream-comment>
-    pub fn render(&self) -> String {
+    pub fn render(&mut self) -> String {
         let (width, height) = (self.bounds.dx(), self.bounds.dy());
         let mut canvas = crate::canvas::Canvas::new(width, height);
-        self.draw(&mut canvas, self.bounds);
+        let bounds = self.bounds;
+        self.draw(&mut canvas, bounds);
         canvas.render()
     }
 }
 
-impl crate::canvas::Drawable for Compositor {
-    fn draw(&self, scr: &mut dyn crate::canvas::Screen, area: crate::layer::Rectangle) {
+impl Drawable for Layer {
+    fn draw(&mut self, scr: &mut dyn Screen, area: Rectangle) {
+        let content = charming_ultraviolet::new_styled_string(&self.content);
+        content.draw(scr, area);
+    }
+}
+
+impl Drawable for Compositor {
+    fn draw(&mut self, scr: &mut dyn Screen, area: Rectangle) {
         for cl in &self.layers {
             if cl.bounds.overlaps(&area) {
-                crate::canvas::draw_styled(scr, &cl.layer.content, cl.bounds);
+                cl.layer.draw(scr, cl.bounds);
             }
         }
     }

@@ -4,6 +4,7 @@
 use charming_lipgloss::canvas::{new_canvas, Canvas};
 use charming_lipgloss::layer::{new_compositor, new_layer};
 use charming_lipgloss::style::Style;
+use charming_ultraviolet::Cell;
 
 #[test]
 fn test_canvas_new() {
@@ -17,13 +18,9 @@ fn test_canvas_new() {
 #[test]
 fn test_canvas_set_and_get_cell() {
     let mut c = new_canvas(4, 4);
-    let cell = charming_lipgloss::canvas::Cell {
-        content: 'x',
-        style: Default::default(),
-    };
-    c.set_cell(1, 2, cell);
+    c.set_cell(1, 2, Some(&Cell::new("x")));
     let cell = c.cell_at(1, 2).unwrap();
-    assert_eq!(cell.content, 'x');
+    assert_eq!(cell.content, "x");
 }
 
 #[test]
@@ -33,27 +30,15 @@ fn test_canvas_resize_clear() {
     assert_eq!(c.width(), 8);
     assert_eq!(c.height(), 2);
     c.clear();
-    assert_eq!(c.cell_at(0, 0).unwrap().content, ' ');
+    assert_eq!(c.cell_at(0, 0).unwrap().content, " ");
 }
 
 #[test]
 fn test_canvas_render() {
     let mut c = new_canvas(3, 1);
-    let cell = charming_lipgloss::canvas::Cell {
-        content: 'a',
-        style: Default::default(),
-    };
-    c.set_cell(0, 0, cell.clone());
-    let cell = charming_lipgloss::canvas::Cell {
-        content: 'b',
-        style: Default::default(),
-    };
-    c.set_cell(1, 0, cell.clone());
-    let cell = charming_lipgloss::canvas::Cell {
-        content: 'c',
-        style: Default::default(),
-    };
-    c.set_cell(2, 0, cell);
+    c.set_cell(0, 0, Some(&Cell::new("a")));
+    c.set_cell(1, 0, Some(&Cell::new("b")));
+    c.set_cell(2, 0, Some(&Cell::new("c")));
     assert_eq!(c.render(), "abc");
 }
 
@@ -96,9 +81,40 @@ fn test_compositor() {
 fn test_compositor_render() {
     let l1 = new_layer("Hello", &[]).id("a").z(1);
     let l2 = new_layer("World", &[]).id("b").z(2).x(3);
-    let comp = new_compositor(&[l1, l2]);
+    let mut comp = new_compositor(&[l1, l2]);
     let out = comp.render();
     assert!(out.contains("World"));
     let _ = Style::new;
     let _ = Canvas::new(0, 0);
+}
+
+#[test]
+fn test_canvas_render_upstream() {
+    // Go TestCanvasRender: fully filled canvas.
+    let mut c = new_canvas(5, 3);
+    for y in 0..c.height() {
+        for x in 0..c.width() {
+            c.set_cell(x, y, Some(&Cell::new(".")));
+        }
+    }
+    for x in 1..4 {
+        c.set_cell(x, 1, Some(&Cell::new("#")));
+    }
+    assert_eq!(c.render(), ".....\n.###.\n.....");
+}
+
+#[test]
+fn test_canvas_render_trailing_spaces() {
+    // Go TestCanvasRenderWithTrailingSpaces.
+    let mut c = new_canvas(5, 2);
+    for y in 0..c.height() {
+        for x in 0..c.width() {
+            if x < 3 {
+                c.set_cell(x, y, Some(&Cell::new("A")));
+            } else {
+                c.set_cell(x, y, Some(&Cell::new(" ")));
+            }
+        }
+    }
+    assert_eq!(c.render(), "AAA\nAAA");
 }

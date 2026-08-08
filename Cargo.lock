@@ -3,8 +3,37 @@
 version = 4
 
 [[package]]
+name = "charming-colorprofile"
+version = "0.4.3"
+dependencies = [
+ "charming-x-ansi",
+]
+
+[[package]]
 name = "charming-lipgloss"
 version = "2.0.5"
+dependencies = [
+ "charming-colorprofile",
+ "charming-ultraviolet",
+ "charming-x-ansi",
+ "libc",
+ "unicode-segmentation",
+ "unicode-width",
+]
+
+[[package]]
+name = "charming-ultraviolet"
+version = "0.0.0-20260703014108"
+dependencies = [
+ "charming-x-ansi",
+ "libc",
+ "unicode-segmentation",
+ "unicode-width",
+]
+
+[[package]]
+name = "charming-x-ansi"
+version = "0.0.0-20260703014108"
 dependencies = [
  "libc",
  "unicode-segmentation",

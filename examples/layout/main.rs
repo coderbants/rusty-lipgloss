@@ -386,7 +386,7 @@ fn main() {
         new_layer(&document, &[]),
         new_layer(&modal, &[]).x(58).y(44),
     ];
-    let comp = new_compositor(&layers);
+    let mut comp = new_compositor(&layers);
 
     // Print with a special writer that downsamples colors to the terminal's
     // palette (or strips them entirely when output is not a TTY).
