@@ -29,24 +29,38 @@ if ! (cd "$UPSTREAM" && go build ./... >/dev/null 2>&1); then
   exit 1
 fi
 
-# 2. Pairs to compare: upstream example dir -> Rust example name.
+# 2. Pairs to compare: upstream example dir -> Rust example name -> mode.
+# Modes: "byte" (verbatim diff) or "sortblocks" (blocks separated by blank
+# lines are sorted before diffing; needed when the upstream example's output
+# order is non-deterministic, e.g. Go map iteration in the brightness example).
 PAIRS="
-blending/linear-2d/standalone:blend_2d
-brightness:brightness
-canvas:canvas
-color/standalone:color_standalone
-layout:layout
-list/grocery:list_grocery
-list/simple:list_simple
-table/ansi:table_ansi
-table/languages:table_languages
-tree/simple:tree_simple
+blending/linear-2d/standalone:blend_2d:byte
+brightness:brightness:sortblocks
+canvas:canvas:byte
+color/standalone:color_standalone:byte
+layout:layout:byte
+list/grocery:list_grocery:byte
+list/simple:list_simple:byte
+table/ansi:table_ansi:byte
+table/languages:table_languages:byte
+tree/simple:tree_simple:byte
 "
+
+# Sort blocks (blank-line separated) within the output.
+sortblocks() {
+  python3 -c "
+import sys
+blocks = sys.stdin.read().split('\n\n')
+print('\n\n'.join(sorted(blocks)))
+"
+}
 
 fails=0
 for pair in $PAIRS; do
   go_dir="${pair%%:*}"
-  rs_ex="${pair##*:}"
+  rest="${pair#*:}"
+  rs_ex="${rest%%:*}"
+  mode="${rest##*:}"
   go_out="$TMP/go_$(echo "$go_dir" | tr '/' '_').out"
   rs_out="$TMP/rs_${rs_ex}.out"
 
@@ -63,7 +77,15 @@ for pair in $PAIRS; do
     continue
   }
 
-  if diff -q "$go_out" "$rs_out" >/dev/null 2>&1; then
+  if [ "$mode" = "sortblocks" ]; then
+    ok=0
+    diff <(sortblocks <"$go_out") <(sortblocks <"$rs_out") >/dev/null 2>&1 && ok=1
+  else
+    ok=0
+    diff -q "$go_out" "$rs_out" >/dev/null 2>&1 && ok=1
+  fi
+
+  if [ "$ok" -eq 1 ]; then
     echo "IDENTICAL: $go_dir"
   else
     echo "DIFFERS:   $go_dir"
