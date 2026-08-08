@@ -1,0 +1,24 @@
+//! Cleanroom Rust port of upstream Go example: `examples/tree/simple/main.go`
+//! Upstream Target Tag / Version: `v2.0.5`
+//!
+//! A simple operating-systems tree.
+
+use charming_lipgloss::tree::{self, Child};
+use charming_lipgloss::writer::println;
+
+fn main() {
+    let linux = tree::root("Linux")
+        .child(Child::Str("NixOS".into()))
+        .child(Child::Str("Arch Linux (btw)".into()))
+        .child(Child::Str("Void Linux".into()));
+    let bsd = tree::root("BSD")
+        .child(Child::Str("FreeBSD".into()))
+        .child(Child::Str("OpenBSD".into()));
+
+    let t = tree::root(".")
+        .child(Child::Str("macOS".into()))
+        .child(Child::Tree(linux))
+        .child(Child::Tree(bsd));
+
+    println(&t.render()).unwrap();
+}
