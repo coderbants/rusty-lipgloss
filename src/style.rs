@@ -257,11 +257,11 @@ impl Style {
                     // Padding is not inherited.
                     continue;
                 }
-                BACKGROUND_KEY => {
+                BACKGROUND_KEY
+                    if !self.is_set(MARGIN_BACKGROUND_KEY) && !i.is_set(MARGIN_BACKGROUND_KEY) =>
+                {
                     // The margins also inherit the background color.
-                    if !self.is_set(MARGIN_BACKGROUND_KEY) && !i.is_set(MARGIN_BACKGROUND_KEY) {
-                        self.set(MARGIN_BACKGROUND_KEY, Value::Color(i.bg_color.clone()));
-                    }
+                    self.set(MARGIN_BACKGROUND_KEY, Value::Color(i.bg_color.clone()));
                 }
                 _ => {}
             }
