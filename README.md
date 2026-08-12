@@ -18,6 +18,19 @@ Style, format and layout tools for terminal applications. Built for Rust based o
 
 ## Overview
 
+## Installation
+
+```sh
+cargo add charming-lipgloss
+```
+
+Use the crate to style, format and lay out terminal text:
+
+```rust
+use charming_lipgloss::new_style;
+let styled = new_style().bold(true).foreground("63").render("hello");
+```
+
 `charming-lipgloss` provides styling, layout, string joining, border rendering, tables, trees, and lists for terminal UI applications in lightweight, zero-unsafe, minimal-dependency Rust.
 
 ## Principles
