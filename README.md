@@ -1,6 +1,7 @@
 <p>
     <a href="charming-lipgloss.png"><img src="charming-lipgloss.png" width="313" alt="Charming Lip Gloss"></a><br>
     <a href="https://crates.io/crates/charming-lipgloss"><img src="https://img.shields.io/crates/v/charming-lipgloss.svg" alt="crates.io"></a>
+    <a href="https://github.com/coderbants/charming-lipgloss/actions"><img src="https://github.com/coderbants/charming-lipgloss/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
 </p>
 
 # Charming Lip Gloss (`charming-lipgloss`)
@@ -16,6 +17,14 @@ Style, format and layout tools for terminal applications. Built for Rust based o
 </p>
 
 ## Overview
+
+Charming Lip Gloss gives you a small, fast, dependency-free toolkit for styling and laying out terminal output:
+
+- **Styles** — colors, bold/italic/underline, backgrounds, borders, margins, padding and alignment, all composed with a fluent builder API.
+- **Text layout** — width and height control, word wrapping, truncation, and horizontal/vertical alignment.
+- **Composition** — join strings horizontally or vertically, build tables, trees and lists, and render borders around any block.
+- **Parity** — every upstream Go test is ported 1:1, and the E2E harness verifies byte-for-byte output against `charmbracelet/lipgloss`.
+
 
 ## Installation
 
@@ -41,16 +50,33 @@ let styled = new_style().bold(true).foreground("63").render("hello");
 
 ## Usage Example
 
-```rust
-use charming_lipgloss::{Style, Position, Border};
+Style text, then compose it into larger layouts:
 
-let style = Style::new()
+```rust
+use charming_lipgloss::{
+    Border, Position, new_style, join_vertical, BOTTOM, CENTER, LEFT, RIGHT, TOP,
+};
+
+// A styled line of text.
+let title = new_style()
     .bold(true)
     .foreground("#FF0000")
-    .background("#000000");
+    .render("Hello Charming Lipgloss!");
 
-println!("{}", style.render("Hello Charming Lipgloss!"));
+// A block with a border, padded and aligned.
+let panel = new_style()
+    .border(Border::rounded())
+    .width(30)
+    .height(5)
+    .align(&[CENTER])
+    .render("Centered inside a rounded border");
+
+// Join blocks together.
+let layout = join_vertical(TOP, &[title, panel]);
+println!("{layout}");
 ```
+
+Styles compose: set a background on one style and inherit it into another with `inherit`, render bordered tables with `charming_lipgloss::table`, and lay out lists with `charming_lipgloss::list`. See the [examples](https://github.com/coderbants/charming-lipgloss/tree/dev/examples) directory for complete programs.
 
 ## License
 
