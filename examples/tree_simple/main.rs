@@ -17,8 +17,8 @@ fn main() {
 
     let t = tree::root(".")
         .child(Child::Str("macOS".into()))
-        .child(Child::Tree(linux))
-        .child(Child::Tree(bsd));
+        .child(Child::Tree(Box::new(linux)))
+        .child(Child::Tree(Box::new(bsd)));
 
     println(&t.render()).unwrap();
 }

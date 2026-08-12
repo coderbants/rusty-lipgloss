@@ -9,6 +9,7 @@
 pub mod children;
 pub mod enumerator;
 pub mod renderer;
+#[allow(clippy::module_inception)] // deliberate mirror of upstream tree/tree.go layout
 pub mod tree;
 
 pub use children::{new_filter, new_string_data, Children, Filter, NodeChildren};

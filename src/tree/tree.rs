@@ -6,8 +6,7 @@
 //! enumerators, indenters, and styles.
 //! </public-docs>
 
-use super::children::Children;
-use super::renderer::{new_renderer, render, Renderer};
+use super::renderer::{new_renderer, render, Renderer, StyleFunc};
 use std::sync::Arc;
 
 use crate::style::Style;
@@ -18,7 +17,7 @@ pub enum Node {
     /// A leaf node without children.
     Leaf(Leaf),
     /// A tree node with children.
-    Tree(Tree),
+    Tree(Box<Tree>),
 }
 
 impl Node {
@@ -62,7 +61,10 @@ pub struct Leaf {
 impl Leaf {
     /// Returns a new Leaf.
     pub fn new(value: String) -> Leaf {
-        Leaf { value, hidden: false }
+        Leaf {
+            value,
+            hidden: false,
+        }
     }
 
     /// Returns the value of a Leaf node.
@@ -80,7 +82,7 @@ impl Leaf {
 #[derive(Clone)]
 pub enum Child {
     /// A tree node.
-    Tree(Tree),
+    Tree(Box<Tree>),
     /// A leaf node.
     Leaf(Leaf),
     /// A string leaf.
@@ -101,7 +103,7 @@ impl From<String> for Child {
 
 impl From<Tree> for Child {
     fn from(t: Tree) -> Self {
-        Child::Tree(t)
+        Child::Tree(Box::new(t))
     }
 }
 
@@ -112,25 +114,13 @@ impl From<Leaf> for Child {
 }
 
 /// Tree implements a Node.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Tree {
     value: String,
     hidden: bool,
     offset: (usize, usize),
     children: Vec<Node>,
     renderer: Option<Renderer>,
-}
-
-impl Default for Tree {
-    fn default() -> Self {
-        Tree {
-            value: String::new(),
-            hidden: false,
-            offset: (0, 0),
-            children: Vec::new(),
-            renderer: None,
-        }
-    }
 }
 
 impl Tree {
@@ -191,9 +181,25 @@ impl Tree {
     pub fn render(&self) -> String {
         let r = match &self.renderer {
             Some(r) => r,
-            None => return render(&new_renderer(), &self.value, self.effective_children(), self.hidden, true, ""),
+            None => {
+                return render(
+                    &new_renderer(),
+                    &self.value,
+                    self.effective_children(),
+                    self.hidden,
+                    true,
+                    "",
+                )
+            }
         };
-        render(r, &self.value, self.effective_children(), self.hidden, true, "")
+        render(
+            r,
+            &self.value,
+            self.effective_children(),
+            self.hidden,
+            true,
+            "",
+        )
     }
 
     /// Returns the children of a node, honoring offsets.
@@ -204,11 +210,7 @@ impl Tree {
     /// Returns the effective children slice honoring offsets.
     pub(crate) fn effective_children(&self) -> &[Node] {
         let start = self.offset.0.min(self.children.len());
-        let end = self
-            .children
-            .len()
-            .saturating_sub(self.offset.1)
-            .max(start);
+        let end = self.children.len().saturating_sub(self.offset.1).max(start);
         &self.children[start..end]
     }
 
@@ -223,7 +225,7 @@ impl Tree {
                 if let Some(rm) = rm {
                     self.children.remove(rm);
                 }
-                self.children.push(Node::Tree(new_item));
+                self.children.push(Node::Tree(Box::new(new_item)));
             }
             Child::Leaf(l) => {
                 self.children.push(Node::Leaf(l));
@@ -245,32 +247,24 @@ impl Tree {
 
     /// EnumeratorStyle sets a static style for all enumerators.
     pub fn enumerator_style(mut self, style: Style) -> Tree {
-        self.ensure_renderer_mut().style.enumerator_func =
-            Arc::new(move |_, _| style.clone());
+        self.ensure_renderer_mut().style.enumerator_func = Arc::new(move |_, _| style.clone());
         self
     }
 
     /// EnumeratorStyleFunc sets the enumeration style function.
-    pub fn enumerator_style_func(
-        mut self,
-        f: Arc<dyn Fn(&dyn Children, usize) -> Style>,
-    ) -> Tree {
+    pub fn enumerator_style_func(mut self, f: StyleFunc) -> Tree {
         self.ensure_renderer_mut().style.enumerator_func = f;
         self
     }
 
     /// IndenterStyle sets a static style for all indenters.
     pub fn indenter_style(mut self, style: Style) -> Tree {
-        self.ensure_renderer_mut().style.indenter_func =
-            Arc::new(move |_, _| style.clone());
+        self.ensure_renderer_mut().style.indenter_func = Arc::new(move |_, _| style.clone());
         self
     }
 
     /// IndenterStyleFunc sets the indentation style function.
-    pub fn indenter_style_func(
-        mut self,
-        f: Arc<dyn Fn(&dyn Children, usize) -> Style>,
-    ) -> Tree {
+    pub fn indenter_style_func(mut self, f: StyleFunc) -> Tree {
         self.ensure_renderer_mut().style.indenter_func = f;
         self
     }
@@ -283,16 +277,12 @@ impl Tree {
 
     /// ItemStyle sets a static style for all items.
     pub fn item_style(mut self, style: Style) -> Tree {
-        self.ensure_renderer_mut().style.item_func =
-            Arc::new(move |_, _| style.clone());
+        self.ensure_renderer_mut().style.item_func = Arc::new(move |_, _| style.clone());
         self
     }
 
     /// ItemStyleFunc sets the item style function.
-    pub fn item_style_func(
-        mut self,
-        f: Arc<dyn Fn(&dyn Children, usize) -> Style>,
-    ) -> Tree {
+    pub fn item_style_func(mut self, f: StyleFunc) -> Tree {
         self.ensure_renderer_mut().style.item_func = f;
         self
     }
@@ -341,7 +331,7 @@ fn ensure_parent(nodes: &[Node], item: &mut Tree) -> (Tree, Option<usize>) {
                 let c = item.children[i].clone();
                 p.children.push(c);
             }
-            (p, Some(j))
+            (*p, Some(j))
         }
         Node::Leaf(l) => {
             item.value = l.value().to_string();

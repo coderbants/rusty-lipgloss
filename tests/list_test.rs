@@ -7,7 +7,9 @@ use charming_lipgloss::list::{arabic, bullet, roman};
 
 #[test]
 fn test_list_render() {
-    let l = charming_lipgloss::list::List::new().item("First").item("Second");
+    let l = charming_lipgloss::list::List::new()
+        .item("First")
+        .item("Second");
     assert_eq!(l.render(), "• First\n• Second");
 }
 
@@ -19,15 +21,13 @@ fn test_list_new_with_items() {
 
 #[test]
 fn test_list_arabic_enumerator() {
-    let l = charming_lipgloss::list::new(&["Foo", "Bar", "Baz"])
-        .enumerator(Arc::new(arabic));
+    let l = charming_lipgloss::list::new(&["Foo", "Bar", "Baz"]).enumerator(Arc::new(arabic));
     assert_eq!(l.render(), "1. Foo\n2. Bar\n3. Baz");
 }
 
 #[test]
 fn test_list_roman_enumerator() {
-    let l = charming_lipgloss::list::new(&["Foo", "Bar", "Baz"])
-        .enumerator(Arc::new(roman));
+    let l = charming_lipgloss::list::new(&["Foo", "Bar", "Baz"]).enumerator(Arc::new(roman));
     let out = l.render();
     assert!(out.contains("I."));
     assert!(out.contains("II."));

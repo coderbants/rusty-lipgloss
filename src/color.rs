@@ -65,9 +65,10 @@ pub enum Profile {
 pub struct NoColor;
 
 /// A color value that can be applied as a terminal foreground or background.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum Color {
     /// The absence of color.
+    #[default]
     NoColor,
     /// 16-color ANSI code (0-15).
     Ansi16(u8),
@@ -98,12 +99,6 @@ pub enum Color {
         /// The 16-color ANSI value.
         ansi: Box<Color>,
     },
-}
-
-impl Default for Color {
-    fn default() -> Self {
-        Color::NoColor
-    }
 }
 
 impl Color {
@@ -148,21 +143,11 @@ impl Color {
             }
             Color::Ansi16(c) => {
                 let (r, g, b) = basic_palette(*c);
-                (
-                    (r as u32) << 8,
-                    (g as u32) << 8,
-                    (b as u32) << 8,
-                    0xFFFF,
-                )
+                ((r as u32) << 8, (g as u32) << 8, (b as u32) << 8, 0xFFFF)
             }
             Color::Ansi256(c) => {
                 let (r, g, b) = indexed_palette(*c);
-                (
-                    (r as u32) << 8,
-                    (g as u32) << 8,
-                    (b as u32) << 8,
-                    0xFFFF,
-                )
+                ((r as u32) << 8, (g as u32) << 8, (b as u32) << 8, 0xFFFF)
             }
             _ => (0, 0, 0, 0xFFFF),
         }
@@ -331,9 +316,7 @@ pub fn light_dark(is_dark: bool) -> impl Fn(Color, Color) -> Color {
 ///     lipgloss.Color("#ff34ac"), // TrueColor
 /// )
 /// ```</upstream-comment>
-pub fn complete(
-    profile: charming_colorprofile::Profile,
-) -> impl Fn(Color, Color, Color) -> Color {
+pub fn complete(profile: charming_colorprofile::Profile) -> impl Fn(Color, Color, Color) -> Color {
     move |ansi, ansi256, truecolor| match profile {
         charming_colorprofile::Profile::Ansi => ansi,
         charming_colorprofile::Profile::Ansi256 => ansi256,
@@ -359,12 +342,7 @@ pub fn alpha(c: Color, alpha: f64) -> Color {
     match c {
         Color::TrueColor { r, g, b } => {
             let a = (clamp(alpha, 0.0, 1.0) * 255.0) as u8;
-            Color::TrueColor {
-                r,
-                g,
-                b,
-            }
-            .with_alpha(a)
+            Color::TrueColor { r, g, b }.with_alpha(a)
         }
         _ => c,
     }
@@ -574,23 +552,111 @@ pub(crate) struct Lab {
 const EPSILON: f64 = 216.0 / 24389.0;
 const KAPPA: f64 = 24389.0 / 27.0;
 
+/// The D65 reference white point (CIE XYZ).
+pub(crate) const D65: (f64, f64, f64) = (0.95047, 1.00000, 1.08883);
+
+/// A color in CIE L*u*v* space with L scaled to [0..1], mirroring
+/// go-colorful's `Luv()` (which returns `l` in [0..1], not [0..100]).
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Luv {
+    pub l: f64,
+    pub u: f64,
+    pub v: f64,
+}
+
+/// xyz_to_uv computes the u', v' chromaticity coordinates used by the Luv
+/// conversions (upstream `xyz_to_uv`).
+fn xyz_to_uv(x: f64, y: f64, z: f64) -> (f64, f64) {
+    let denom = x + 15.0 * y + 3.0 * z;
+    if denom == 0.0 {
+        (0.0, 0.0)
+    } else {
+        (4.0 * x / denom, 9.0 * y / denom)
+    }
+}
+
+/// Converts XYZ to CIE L*u*v* using the D65 reference white, mirroring
+/// upstream `XyzToLuvWhiteRef`.
+pub(crate) fn xyz_to_luv(x: f64, y: f64, z: f64) -> Luv {
+    let (wx, wy, wz) = D65;
+    let l = if y / wy <= (6.0 / 29.0) * (6.0 / 29.0) * (6.0 / 29.0) {
+        y / wy * (29.0 / 3.0 * 29.0 / 3.0 * 29.0 / 3.0) / 100.0
+    } else {
+        // Mirror the upstream `1.16*math.Cbrt(...) - 0.16` FMA contraction
+        // (Go's gc contracts `a*b + c` on arm64).
+        1.16_f64.mul_add((y / wy).cbrt(), -0.16)
+    };
+    let (ubis, vbis) = xyz_to_uv(x, y, z);
+    let (un, vn) = xyz_to_uv(wx, wy, wz);
+    Luv {
+        l,
+        u: 13.0 * l * (ubis - un),
+        v: 13.0 * l * (vbis - vn),
+    }
+}
+
+/// Converts CIE L*u*v* back to XYZ using the D65 reference white, mirroring
+/// upstream `LuvToXyzWhiteRef`.
+pub(crate) fn luv_to_xyz(l: f64, u: f64, v: f64) -> (f64, f64, f64) {
+    let (wx, wy, wz) = D65;
+    let y = if l <= 0.08 {
+        wy * l * 100.0 * 3.0 / 29.0 * 3.0 / 29.0 * 3.0 / 29.0
+    } else {
+        wy * ((l + 0.16) / 1.16).powi(3)
+    };
+    let (un, vn) = xyz_to_uv(wx, wy, wz);
+    if l != 0.0 {
+        let ubis = u / (13.0 * l) + un;
+        let vbis = v / (13.0 * l) + vn;
+        let x = y * 9.0 * ubis / (4.0 * vbis);
+        // Mirror the upstream `12.0 - 3.0*ubis - 20.0*vbis` FMA contraction.
+        let z = (-3.0_f64).mul_add(ubis, 12.0);
+        let z = (-20.0_f64).mul_add(vbis, z);
+        let z = y * z / (4.0 * vbis);
+        (x, y, z)
+    } else {
+        (0.0, 0.0, 0.0)
+    }
+}
+
 pub(crate) fn srgb_to_xyz(r: f64, g: f64, b: f64) -> (f64, f64, f64) {
     let lr = linearize(r);
     let lg = linearize(g);
     let lb = linearize(b);
-    (
-        lr * 0.4124 + lg * 0.3576 + lb * 0.1805,
-        lr * 0.2126 + lg * 0.7152 + lb * 0.0722,
-        lr * 0.0193 + lg * 0.1192 + lb * 0.9505,
-    )
+    // The upstream `LinearRgbToXyz` is evaluated with FMA contraction on
+    // arm64 (Go's gc fuses the second operand of an add: `a + b*c` becomes
+    // `fma(b, c, a)`); mirror it with `mul_add`.
+    let x = 0.180_480_788_401_834_3_f64.mul_add(
+        lb,
+        0.35758433938387796_f64.mul_add(lg, lr * 0.412_390_799_265_959_5),
+    );
+    let y = 0.072_192_315_360_733_71_f64.mul_add(
+        lb,
+        0.715_168_678_767_755_9_f64.mul_add(lg, lr * 0.21263900587151036),
+    );
+    let z = 0.950_532_152_249_660_6_f64.mul_add(
+        lb,
+        0.11919477979462599_f64.mul_add(lg, lr * 0.019_330_818_715_591_85),
+    );
+    (x, y, z)
 }
 
 pub(crate) fn xyz_to_srgb(x: f64, y: f64, z: f64) -> (f64, f64, f64) {
-    (
-        linearize_rgb(x * 3.2406 + y * -1.5372 + z * -0.4986),
-        linearize_rgb(x * -0.9689 + y * 1.8758 + z * 0.0415),
-        linearize_rgb(x * 0.0557 + y * -0.2040 + z * 1.0570),
-    )
+    // Mirror the upstream `XyzToLinearRgb` FMA contraction (`a - b*c` becomes
+    // `fma(-b, c, a)`; see `srgb_to_xyz`).
+    let r = (-0.498_610_760_293_003_3_f64).mul_add(
+        z,
+        (-1.5373831775700935_f64).mul_add(y, x * 3.2409699419045214),
+    );
+    let g = 0.041_555_057_407_175_61_f64.mul_add(
+        z,
+        1.8759675015077207_f64.mul_add(y, x * -0.969_243_636_280_879_8),
+    );
+    let b = 1.0569715142428786_f64.mul_add(
+        z,
+        (-0.20397695888897657_f64).mul_add(y, x * 0.055_630_079_696_993_61),
+    );
+    (linearize_rgb(r), linearize_rgb(g), linearize_rgb(b))
 }
 
 fn linearize(c: f64) -> f64 {
@@ -605,12 +671,18 @@ fn linearize_rgb(c: f64) -> f64 {
     if c <= 0.0031308 {
         12.92 * c
     } else {
-        1.055 * c.powf(1.0 / 2.4) - 0.055
+        // Mirror the upstream `1.055*math.Pow(v, 1.0/2.4) - 0.055` FMA
+        // contraction (Go's gc contracts `a*b + c` on arm64).
+        1.055_f64.mul_add(c.powf(1.0 / 2.4), -0.055)
     }
 }
 
 pub(crate) fn lab_from_rgb(r: u8, g: u8, b: u8) -> Lab {
     let (x, y, z) = srgb_to_xyz(r as f64 / 255.0, g as f64 / 255.0, b as f64 / 255.0);
+    lab_from_xyz(x, y, z)
+}
+
+fn lab_from_xyz(x: f64, y: f64, z: f64) -> Lab {
     // D65 reference white.
     let xr = x / 0.95047;
     let yr = y / 1.00000;
@@ -642,7 +714,13 @@ fn lab_f_inv(t: f64) -> f64 {
     }
 }
 
-pub(crate) fn rgb_from_lab(lab: Lab) -> (u8, u8, u8) {
+/// rgb_from_lab_16 converts Lab back to sRGB bytes the way the upstream
+/// renders a blended color. go-colorful's `Color` stores gamma-encoded
+/// (sRGB) values — `Xyz(...)` goes through `LinearRgb`, whose `delinearize`
+/// re-applies the sRGB curve — and lipgloss renders them via the Go color
+/// interface: `RGBA()` rounds to 16 bits and the renderer takes the high
+/// byte, i.e. `(stored * 65535.0).round() >> 8` per channel.
+pub(crate) fn rgb_from_lab_16(lab: Lab) -> (u8, u8, u8) {
     let fy = (lab.l + 16.0) / 116.0;
     let fx = fy + lab.a / 500.0;
     let fz = fy - lab.b / 200.0;
@@ -651,9 +729,9 @@ pub(crate) fn rgb_from_lab(lab: Lab) -> (u8, u8, u8) {
     let zr = lab_f_inv(fz);
     let (r, g, b) = xyz_to_srgb(xr * 0.95047, yr * 1.00000, zr * 1.08883);
     (
-        (clamp(r, 0.0, 1.0) * 255.0).round() as u8,
-        (clamp(g, 0.0, 1.0) * 255.0).round() as u8,
-        (clamp(b, 0.0, 1.0) * 255.0).round() as u8,
+        ((r * 65535.0).round() as u64 >> 8) as u8,
+        ((g * 65535.0).round() as u64 >> 8) as u8,
+        ((b * 65535.0).round() as u64 >> 8) as u8,
     )
 }
 
@@ -664,7 +742,7 @@ pub(crate) fn rgb_from_lab(lab: Lab) -> (u8, u8, u8) {
 /// parse_hex parses a hex color string and returns a Color. The string can be
 /// in the format `#RRGGBB` or `#RGB`.
 pub fn parse_hex(s: &str) -> Result<Color, &'static str> {
-    if s.len() < 1 || !s.starts_with('#') {
+    if s.is_empty() || !s.starts_with('#') {
         return Err("invalid hex format");
     }
     let hex = &s[1..];
@@ -695,25 +773,18 @@ pub fn parse_hex(s: &str) -> Result<Color, &'static str> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
     fn test_parse_hex() {
         assert_eq!(
             Color::parse("#FF0000"),
-            Color::TrueColor {
-                r: 255,
-                g: 0,
-                b: 0
-            }
+            Color::TrueColor { r: 255, g: 0, b: 0 }
         );
         assert_eq!(
             Color::parse("#F00"),
-            Color::TrueColor {
-                r: 255,
-                g: 0,
-                b: 0
-            }
+            Color::TrueColor { r: 255, g: 0, b: 0 }
         );
         assert_eq!(Color::parse("FF0000"), Color::NoColor);
     }

@@ -99,7 +99,10 @@ pub(crate) fn align_text_horizontal(
         let line_width = crate::size::width(l);
 
         let mut short_amount = widest_line - line_width;
-        short_amount += max(0, width as isize - (short_amount as isize + line_width as isize)) as usize;
+        short_amount += max(
+            0,
+            width as isize - (short_amount as isize + line_width as isize),
+        ) as usize;
 
         let mut line = l.to_string();
         if short_amount > 0 {
@@ -186,7 +189,10 @@ mod tests {
         assert_eq!(align_text_vertical("Foo", TOP, 2), "Foo\n");
         assert_eq!(align_text_vertical("Foo", CENTER, 5), "\n\nFoo\n\n");
         assert_eq!(align_text_vertical("Foo", BOTTOM, 5), "\n\n\n\nFoo");
-        assert_eq!(align_text_vertical("Foo\nBar\nBaz", CENTER, 5), "\nFoo\nBar\nBaz\n");
+        assert_eq!(
+            align_text_vertical("Foo\nBar\nBaz", CENTER, 5),
+            "\nFoo\nBar\nBaz\n"
+        );
     }
 
     #[test]

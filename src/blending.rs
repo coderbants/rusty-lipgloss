@@ -5,7 +5,7 @@
 //! Color blending algorithms using the "CIE L*, a*, b*" (CIELAB) color-space.
 //! </public-docs>
 
-use crate::color::{lab_from_rgb, rgb_from_lab, Color, Lab};
+use crate::color::{lab_from_rgb, rgb_from_lab_16, Color, Lab};
 
 fn clamp(v: f64, low: f64, high: f64) -> f64 {
     v.clamp(low, high)
@@ -44,7 +44,9 @@ pub fn blend_1d(steps: usize, stops: &[Color]) -> Vec<Color> {
 
     let mut blended: Vec<Color> = Vec::with_capacity(steps);
 
-    // Convert stops to Lab once.
+    // Convert stops to Lab once. Upstream feeds go-colorful through the Go
+    // color interface: `lipgloss.Color(...)` parses to `color.RGBA`, whose
+    // `RGBA()` multiplies by 0x101 — so `r16/65535 == r/255` exactly.
     let cstops: Vec<Lab> = stops
         .iter()
         .map(|k| {
@@ -78,7 +80,9 @@ pub fn blend_1d(steps: usize, stops: &[Color]) -> Vec<Color> {
             let l = from.l + blending_factor * (to.l - from.l);
             let a = from.a + blending_factor * (to.a - from.a);
             let b = from.b + blending_factor * (to.b - from.b);
-            let (r, g, b) = rgb_from_lab(Lab { l, a, b });
+            // Upstream renders the blended linear value through the Go
+            // color interface: round to 16 bits, take the high byte.
+            let (r, g, b) = rgb_from_lab_16(Lab { l, a, b });
             blended.push(Color::TrueColor { r, g, b });
         }
     }
@@ -171,7 +175,7 @@ fn ensure_not_transparent(c: &Color) -> Color {
 pub fn blend_1d_pair(start: &Color, end: &Color, factor: f64) -> Color {
     let factor = factor.clamp(0.0, 1.0);
     blend_1d(2, &[start.clone(), end.clone()])
-        .get(0)
+        .first()
         .cloned()
         .unwrap_or_else(|| {
             // Fallback: linear interpolation for TrueColor.
@@ -195,6 +199,49 @@ pub fn blend_1d_pair(start: &Color, end: &Color, factor: f64) -> Color {
                 _ => start.clone(),
             }
         })
+}
+
+/// <upstream-comment>BlendLuv blends two colors in the CIE-L*u*v* color-space, which should result in a
+/// smoother blend.
+/// t == 0 results in c1, t == 1 results in c2</upstream-comment>
+pub fn blend_luv_pair(start: &Color, end: &Color, factor: f64) -> Color {
+    let (r, g, b) = blend_luv_rgb(start, end, factor);
+    // The upstream round-trips through go-colorful's `color.Color` interface
+    // (`RGBA()` rounds to 16 bits, the renderer takes the high byte).
+    let conv = |c: f64| ((c.clamp(0.0, 1.0) * 65535.0).round() as u64 >> 8) as u8;
+    Color::TrueColor {
+        r: conv(r),
+        g: conv(g),
+        b: conv(b),
+    }
+}
+
+/// Blends two colors in CIE-L*u*v* space and returns the raw gamma-encoded
+/// sRGB component values in [0..1], mirroring go-colorful's `BlendLuv`
+/// result (`Color{R, G, B}`). `colorToHex`-style consumers truncate
+/// `f * 255` to recover 8-bit components.
+pub fn blend_luv_rgb(start: &Color, end: &Color, factor: f64) -> (f64, f64, f64) {
+    let factor = factor.clamp(0.0, 1.0);
+    let from = start.rgba_bytes();
+    let to = end.rgba_bytes();
+    let (fx, fy, fz) = crate::color::srgb_to_xyz(
+        from.0 as f64 / 255.0,
+        from.1 as f64 / 255.0,
+        from.2 as f64 / 255.0,
+    );
+    let (tx, ty, tz) = crate::color::srgb_to_xyz(
+        to.0 as f64 / 255.0,
+        to.1 as f64 / 255.0,
+        to.2 as f64 / 255.0,
+    );
+    let luv1 = crate::color::xyz_to_luv(fx, fy, fz);
+    let luv2 = crate::color::xyz_to_luv(tx, ty, tz);
+    let (x, y, z) = crate::color::luv_to_xyz(
+        luv1.l + factor * (luv2.l - luv1.l),
+        luv1.u + factor * (luv2.u - luv1.u),
+        luv1.v + factor * (luv2.v - luv1.v),
+    );
+    crate::color::xyz_to_srgb(x, y, z)
 }
 
 #[cfg(test)]

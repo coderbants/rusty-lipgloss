@@ -7,11 +7,10 @@
 //! </public-docs>
 
 pub mod enumerator;
+#[allow(clippy::module_inception)] // deliberate mirror of upstream list/list.go layout
 pub mod list;
 
-pub use enumerator::{
-    alphabet, arabic, asterisk, bullet, dash, roman, Enumerator, Indenter,
-};
+pub use enumerator::{alphabet, arabic, asterisk, bullet, dash, roman, Enumerator, Indenter};
 pub use list::List;
 
 /// Returns a new list with the given items.

@@ -8,11 +8,12 @@
 
 mod resizing;
 pub mod rows;
+#[allow(clippy::module_inception)] // deliberate mirror of upstream table/table.go layout
 pub mod table;
 mod util;
 
-pub use rows::{new_filter, data_to_matrix, Data, Filter, StringData};
-pub use table::{default_styles, Table, StyleFunc, HEADER_ROW};
+pub use rows::{data_to_matrix, new_filter, Data, Filter, StringData};
+pub use table::{default_styles, StyleFunc, Table, HEADER_ROW};
 
 /// Returns a new Table.
 pub fn new() -> Table {

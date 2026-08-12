@@ -3,8 +3,8 @@
 
 use charming_lipgloss::ansi::Underline;
 use charming_lipgloss::border::Border;
-use charming_lipgloss::style::Style;
 use charming_lipgloss::size;
+use charming_lipgloss::style::Style;
 
 #[test]
 fn test_style_render_bold() {
@@ -24,7 +24,10 @@ fn test_style_render_fg_bg() {
 
 #[test]
 fn test_style_italic() {
-    assert_eq!(Style::new().italic(true).render("hello"), "\x1b[3mhello\x1b[m");
+    assert_eq!(
+        Style::new().italic(true).render("hello"),
+        "\x1b[3mhello\x1b[m"
+    );
 }
 
 #[test]
@@ -37,9 +40,18 @@ fn test_style_underline() {
 
 #[test]
 fn test_style_blink_faint_reverse() {
-    assert_eq!(Style::new().blink(true).render("hello"), "\x1b[5mhello\x1b[m");
-    assert_eq!(Style::new().faint(true).render("hello"), "\x1b[2mhello\x1b[m");
-    assert_eq!(Style::new().reverse(true).render("hello"), "\x1b[7mhello\x1b[m");
+    assert_eq!(
+        Style::new().blink(true).render("hello"),
+        "\x1b[5mhello\x1b[m"
+    );
+    assert_eq!(
+        Style::new().faint(true).render("hello"),
+        "\x1b[2mhello\x1b[m"
+    );
+    assert_eq!(
+        Style::new().reverse(true).render("hello"),
+        "\x1b[7mhello\x1b[m"
+    );
 }
 
 #[test]
@@ -106,7 +118,9 @@ fn test_border_render() {
 
 #[test]
 fn test_hyperlink() {
-    let s = Style::new().hyperlink("https://example.com", &[]).set_string(&["https://example.com"]);
+    let s = Style::new()
+        .hyperlink("https://example.com", &[])
+        .set_string(&["https://example.com"]);
     assert_eq!(
         s.render(""),
         "\x1b]8;;https://example.com\x07https://example.com\x1b]8;;\x07"
@@ -121,7 +135,9 @@ fn test_underline_spaces() {
 
 #[test]
 fn test_underline_styles() {
-    let s = Style::new().underline_style(Underline::Curly).set_string(&["ab c"]);
+    let s = Style::new()
+        .underline_style(Underline::Curly)
+        .set_string(&["ab c"]);
     assert_eq!(
         s.render(""),
         "\x1b[4;4:3ma\x1b[m\x1b[4;4:3mb\x1b[m\x1b[4m \x1b[m\x1b[4;4:3mc\x1b[m"
@@ -132,17 +148,20 @@ fn test_underline_styles() {
 fn test_inherit() {
     let base = Style::new().bold(true).italic(true).foreground("#ffffff");
     let inherited = Style::new().inherit(&base);
-    assert_eq!(inherited.get_bold(), true);
-    assert_eq!(inherited.get_italic(), true);
-    assert_eq!(inherited.get_foreground(), charming_lipgloss::color::Color::parse("#ffffff"));
+    assert!(inherited.get_bold());
+    assert!(inherited.get_italic());
+    assert_eq!(
+        inherited.get_foreground(),
+        charming_lipgloss::color::Color::parse("#ffffff")
+    );
 }
 
 #[test]
 fn test_unset() {
     let s = Style::new().bold(true);
-    assert_eq!(s.get_bold(), true);
+    assert!(s.get_bold());
     let s = s.unset_bold();
-    assert_eq!(s.get_bold(), false);
+    assert!(!s.get_bold());
 }
 
 #[test]

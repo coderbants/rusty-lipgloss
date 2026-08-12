@@ -74,7 +74,9 @@ pub fn arabic(_: &dyn Children, i: usize) -> String {
 /// IV. Qux.
 /// ```</upstream-comment>
 pub fn roman(_: &dyn Children, i: usize) -> String {
-    let roman = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"];
+    let roman = [
+        "M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I",
+    ];
     let arabic = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
     let mut i = i as i64;
     let mut result = String::new();

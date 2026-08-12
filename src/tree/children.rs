@@ -38,9 +38,7 @@ pub type NodeChildren = Vec<Node>;
 
 /// NewStringData returns a Children of string leaves.
 pub fn new_string_data(data: &[&str]) -> Vec<Node> {
-    data.iter()
-        .map(|d| Node::leaf(d.to_string()))
-        .collect()
+    data.iter().map(|d| Node::leaf(d.to_string())).collect()
 }
 
 /// Filter applies a filter on some data. You could use this to create a new

@@ -26,9 +26,7 @@ fn test_tree_multiple_children() {
 
 #[test]
 fn test_tree_nested() {
-    let tree = t("Root").child(Child::from(
-        t("Parent").child(Child::from(t("Child"))),
-    ));
+    let tree = t("Root").child(Child::from(t("Parent").child(Child::from(t("Child")))));
     assert_eq!(tree.render(), "Root\n└── Parent\n    └── Child");
 }
 
@@ -51,6 +49,8 @@ fn test_tree_hidden() {
 
 #[test]
 fn test_tree_string_leaves() {
-    let tree = t("Root").child(Child::Str("a".to_string())).child(Child::Str("b".to_string()));
+    let tree = t("Root")
+        .child(Child::Str("a".to_string()))
+        .child(Child::Str("b".to_string()));
     assert_eq!(tree.render(), "Root\n├── a\n└── b");
 }

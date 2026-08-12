@@ -20,9 +20,10 @@ pub const RESET_STYLE: &str = "\x1b[m";
 /// - Not all terminals support all underline styles.
 /// - Some terminals may render unsupported styles as standard underlines.
 /// - Terminal themes may affect the visibility of different underline styles.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Underline {
     /// No underline.
+    #[default]
     None,
     /// A single underline. This is the default when underline is enabled.
     Single,
@@ -34,12 +35,6 @@ pub enum Underline {
     Dotted,
     /// A dashed underline.
     Dashed,
-}
-
-impl Default for Underline {
-    fn default() -> Self {
-        Underline::None
-    }
 }
 
 /// <upstream-comment>UnderlineNone is no underline.</upstream-comment>
@@ -578,33 +573,43 @@ mod tests {
 
     #[test]
     fn test_sgr_sequences() {
-        let mut s = Style::default();
-        s.bold = true;
+        let s = Style {
+            bold: true,
+            ..Style::default()
+        };
         assert_eq!(s.string(), "\x1b[1m");
         assert_eq!(s.styled("hello"), "\x1b[1mhello\x1b[m");
 
-        let mut s = Style::default();
-        s.fg_color = Some(Color::parse("#5A56E0"));
+        let s = Style {
+            fg_color: Some(Color::parse("#5A56E0")),
+            ..Style::default()
+        };
         assert_eq!(s.string(), "\x1b[38;2;90;86;224m");
         assert_eq!(s.styled("hello"), "\x1b[38;2;90;86;224mhello\x1b[m");
     }
 
     #[test]
     fn test_underline_styles() {
-        let mut s = Style::default();
-        s.underline = true;
-        s.underline_style = Underline::Single;
+        let s = Style {
+            underline: true,
+            underline_style: Underline::Single,
+            ..Style::default()
+        };
         assert_eq!(s.string(), "\x1b[4;4m");
 
-        let mut s = Style::default();
-        s.underline = true;
-        s.underline_style = Underline::Curly;
-        s.ul_color = Some(Color::parse("#FF0000"));
+        let s = Style {
+            underline: true,
+            underline_style: Underline::Curly,
+            ul_color: Some(Color::parse("#FF0000")),
+            ..Style::default()
+        };
         assert_eq!(s.string(), "\x1b[4;58;2;255;0;0;4:3m");
 
-        let mut s = Style::default();
-        s.underline = true;
-        s.underline_style = Underline::Curly;
+        let s = Style {
+            underline: true,
+            underline_style: Underline::Curly,
+            ..Style::default()
+        };
         assert_eq!(s.string(), "\x1b[4;4:3m");
     }
 }

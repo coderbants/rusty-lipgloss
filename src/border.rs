@@ -107,7 +107,11 @@ impl Border {
     /// varying widths, the widest rune is returned. If no border exists on the top
     /// edge, 0 is returned.</upstream-comment>
     pub fn get_top_size(&self) -> usize {
-        get_border_edge_width(&[self.top_left.as_str(), self.top.as_str(), self.top_right.as_str()])
+        get_border_edge_width(&[
+            self.top_left.as_str(),
+            self.top.as_str(),
+            self.top_right.as_str(),
+        ])
     }
 
     /// <upstream-comment>GetRightSize returns the width of the right border. If borders contain
@@ -406,7 +410,10 @@ pub fn max_rune_width(s: &str) -> usize {
     if s.is_empty() {
         return 0;
     }
-    s.chars().map(|c| size::width(&c.to_string())).max().unwrap_or(0)
+    s.chars()
+        .map(|c| size::width(&c.to_string()))
+        .max()
+        .unwrap_or(0)
 }
 
 /// Returns the first rune of the string as a String.
@@ -415,7 +422,12 @@ pub fn get_first_rune_as_string(s: &str) -> &str {
 }
 
 /// Render the horizontal (top or bottom) portion of a border.
-pub(crate) fn render_horizontal_edge(left: &str, middle: &str, right: &str, width: usize) -> String {
+pub(crate) fn render_horizontal_edge(
+    left: &str,
+    middle: &str,
+    right: &str,
+    width: usize,
+) -> String {
     let middle = if middle.is_empty() { " " } else { middle };
     let left_width = size::width(left);
     let right_width = size::width(right);

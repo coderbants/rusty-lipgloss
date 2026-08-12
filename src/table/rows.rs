@@ -42,8 +42,7 @@ impl StringData {
     /// Appends the given row to the table.
     pub fn append(&mut self, row: &[&str]) {
         self.columns = max(self.columns, row.len());
-        self.rows
-            .push(row.iter().map(|s| s.to_string()).collect());
+        self.rows.push(row.iter().map(|s| s.to_string()).collect());
     }
 
     /// Item appends the given row to the table.
@@ -85,10 +84,7 @@ pub struct Filter {
 
 /// NewFilter initializes a new Filter.
 pub fn new_filter(data: Box<dyn Data>) -> Filter {
-    Filter {
-        data,
-        filter: None,
-    }
+    Filter { data, filter: None }
 }
 
 impl Filter {

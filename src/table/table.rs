@@ -324,7 +324,8 @@ impl Table {
         }
 
         // Do all the sizing calculations for width and height.
-        let (widths, heights, first_visible, last_visible, overflow) = self.compute_layout(&headers);
+        let (widths, heights, first_visible, last_visible, overflow) =
+            self.compute_layout(&headers);
         let _ = overflow;
 
         let mut sb = String::new();
@@ -385,8 +386,7 @@ impl Table {
     /// computeHeight computes the height of the table in its current configuration.
     fn compute_height(&self, _headers: &[String], heights: &[usize], row_count: &usize) -> usize {
         let has_headers = !self.headers.is_empty();
-        super::util::sum(heights)
-            .saturating_sub(1)
+        super::util::sum(heights).saturating_sub(1)
             + super::util::btoi(has_headers)
             + super::util::btoi(self.border_top)
             + super::util::btoi(self.border_bottom)
@@ -417,7 +417,11 @@ impl Table {
             s.push_str(&self.border_style.render(&self.border.bottom_left));
         }
         for i in 0..widths.len() {
-            s.push_str(&self.border_style.render(&self.border.bottom.repeat(widths[i])));
+            s.push_str(
+                &self
+                    .border_style
+                    .render(&self.border.bottom.repeat(widths[i])),
+            );
             if i < widths.len() - 1 && self.border_column {
                 s.push_str(&self.border_style.render(&self.border.middle_bottom));
             }
@@ -458,7 +462,8 @@ impl Table {
         }
 
         if self.border_right {
-            let right = format!("{}\n", self.border_style.render(&self.border.right)).repeat(height);
+            let right =
+                format!("{}\n", self.border_style.render(&self.border.right)).repeat(height);
             cells.push(right);
         }
 
@@ -474,8 +479,8 @@ impl Table {
             if self.border_left {
                 s.push_str(&self.border_style.render(&self.border.middle_left));
             }
-            for i in 0..headers.len() {
-                s.push_str(&self.border_style.render(&self.border.top.repeat(widths[i])));
+            for (i, width) in widths.iter().enumerate().take(headers.len()) {
+                s.push_str(&self.border_style.render(&self.border.top.repeat(*width)));
                 if i < headers.len() - 1 && self.border_column {
                     s.push_str(&self.border_style.render(&self.border.middle));
                 }
@@ -540,7 +545,8 @@ impl Table {
         }
 
         if self.border_right {
-            let right = format!("{}\n", self.border_style.render(&self.border.right)).repeat(height);
+            let right =
+                format!("{}\n", self.border_style.render(&self.border.right)).repeat(height);
             cells.push(right);
         }
 
@@ -557,7 +563,11 @@ impl Table {
                 s.push_str(&self.border_style.render(&self.border.middle_left));
             }
             for i in 0..widths.len() {
-                s.push_str(&self.border_style.render(&self.border.bottom.repeat(widths[i])));
+                s.push_str(
+                    &self
+                        .border_style
+                        .render(&self.border.bottom.repeat(widths[i])),
+                );
                 if i < widths.len() - 1 && self.border_column {
                     s.push_str(&self.border_style.render(&self.border.middle));
                 }

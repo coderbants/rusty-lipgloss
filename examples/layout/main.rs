@@ -52,7 +52,12 @@ fn apply_gradient(base: Style, input: &str, from: Color, to: Color) -> String {
     let gradient = blend_1d(chars.len(), &[from, to]);
     let mut output = String::new();
     for (i, char) in chars.iter().enumerate() {
-        output.push_str(&base.clone().foreground_color(gradient[i].clone()).render(char));
+        output.push_str(
+            &base
+                .clone()
+                .foreground_color(gradient[i].clone())
+                .render(char),
+        );
     }
     output
 }
@@ -218,7 +223,8 @@ fn main() {
                 &tab.render("Foundation"),
             ],
         );
-        let gap = tab_gap.render(&" ".repeat(WIDTH.saturating_sub(size::width(&row)).saturating_sub(2)));
+        let gap =
+            tab_gap.render(&" ".repeat(WIDTH.saturating_sub(size::width(&row)).saturating_sub(2)));
         let row = join_horizontal(BOTTOM, &[&row, &gap]);
         doc.push_str(&row);
         doc.push_str("\n\n");
@@ -299,7 +305,12 @@ fn main() {
         let mut b = String::new();
         for x in &colors {
             for y in x {
-                b.push_str(&Style::new().set_string(&["  "]).background_color(y.clone()).string());
+                b.push_str(
+                    &Style::new()
+                        .set_string(&["  "])
+                        .background_color(y.clone())
+                        .string(),
+                );
             }
             b.push('\n');
         }
@@ -366,7 +377,9 @@ fn main() {
         let fish_cake = fish_cake_style.render("🍥 Fish Cake");
         let status_val = status_text
             .clone()
-            .width(WIDTH - size::width(&status_key) - size::width(&encoding) - size::width(&fish_cake))
+            .width(
+                WIDTH - size::width(&status_key) - size::width(&encoding) - size::width(&fish_cake),
+            )
             .render(&format!("Ravishingly {}!", light_dark_state));
 
         let bar = join_horizontal(TOP, &[&status_key, &status_val, &encoding, &fish_cake]);
@@ -396,6 +409,11 @@ fn main() {
 #[allow(dead_code)]
 fn debug_doc(doc: &str) {
     for (i, line) in doc.lines().enumerate() {
-        println!("doc line {}: {} | width={}", i, line, charming_lipgloss::size::width(line));
+        println!(
+            "doc line {}: {} | width={}",
+            i,
+            line,
+            charming_lipgloss::size::width(line)
+        );
     }
 }

@@ -104,7 +104,7 @@ mod tests {
         let ws = with_whitespace_chars("*");
         assert_eq!(ws.render(5), "*****");
         let ws = with_whitespace_chars("\t");
-        assert_eq!(ws.render(10).len() >= 1, true);
+        assert!(!ws.render(10).is_empty());
     }
 
     #[test]

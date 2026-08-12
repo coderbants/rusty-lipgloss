@@ -105,9 +105,9 @@ fn main() {
         }
 
         content.push_str(&name_style.render(&format!("{} (Angle: {:.0}°)", g.name, g.angle)));
-        content.push_str("\n");
+        content.push('\n');
         content.push_str(&gradient_style.render(&box_str));
-        content.push_str("\n");
+        content.push('\n');
     }
 
     println(&content).unwrap();
