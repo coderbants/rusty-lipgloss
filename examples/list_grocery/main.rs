@@ -54,14 +54,26 @@ fn item_style_func(children: &dyn Children, i: usize) -> Style {
 fn main() {
     let l: List = list::new(&[
         "Artichoke",
-        "Baking Flour", "Bananas", "Barley", "Bean Sprouts",
-        "Cashew Apple", "Cashews", "Coconut Milk", "Curry Paste", "Currywurst",
-        "Dill", "Dragonfruit", "Dried Shrimp",
+        "Baking Flour",
+        "Bananas",
+        "Barley",
+        "Bean Sprouts",
+        "Cashew Apple",
+        "Cashews",
+        "Coconut Milk",
+        "Curry Paste",
+        "Currywurst",
+        "Dill",
+        "Dragonfruit",
+        "Dried Shrimp",
         "Eggs",
-        "Fish Cake", "Furikake",
+        "Fish Cake",
+        "Furikake",
         "Jicama",
         "Kohlrabi",
-        "Leeks", "Lentils", "Licorice Root",
+        "Leeks",
+        "Lentils",
+        "Licorice Root",
     ])
     .enumerator(Arc::new(grocery_enumerator))
     .enumerator_style_func(Arc::new(enum_style_func))

@@ -163,67 +163,63 @@ impl Resizer {
         let mut col_widths = self.max_column_widths();
 
         // Cut width of columns that are way too big.
-        let shrink_biggest_columns = |col_widths: &mut Vec<usize>, very_big_only: bool| {
-            loop {
-                let total_width = sum(col_widths) + self.total_horizontal_border();
-                if total_width <= self.table_width {
-                    break;
+        let shrink_biggest_columns = |col_widths: &mut Vec<usize>, very_big_only: bool| loop {
+            let total_width = sum(col_widths) + self.total_horizontal_border();
+            if total_width <= self.table_width {
+                break;
+            }
+
+            let mut big_column_index: isize = -1;
+            let mut big_column_width: isize = -1;
+
+            for (j, width) in col_widths.iter().enumerate() {
+                if *width == self.columns[j].fixed_width {
+                    continue;
                 }
-
-                let mut big_column_index: isize = -1;
-                let mut big_column_width: isize = -1;
-
-                for (j, width) in col_widths.iter().enumerate() {
-                    if *width == self.columns[j].fixed_width {
-                        continue;
-                    }
-                    if very_big_only {
-                        if *width >= (self.table_width / 2) && *width as isize > big_column_width {
-                            big_column_width = *width as isize;
-                            big_column_index = j as isize;
-                        }
-                    } else if *width as isize > big_column_width {
+                if very_big_only {
+                    if *width >= (self.table_width / 2) && *width as isize > big_column_width {
                         big_column_width = *width as isize;
                         big_column_index = j as isize;
                     }
+                } else if *width as isize > big_column_width {
+                    big_column_width = *width as isize;
+                    big_column_index = j as isize;
                 }
-
-                if big_column_index < 0 || col_widths[big_column_index as usize] == 0 {
-                    break;
-                }
-                col_widths[big_column_index as usize] -= 1;
             }
+
+            if big_column_index < 0 || col_widths[big_column_index as usize] == 0 {
+                break;
+            }
+            col_widths[big_column_index as usize] -= 1;
         };
 
         // Cut width of columns that differ the most from the median.
-        let shrink_to_median = |col_widths: &mut Vec<usize>| {
-            loop {
-                let total_width = sum(col_widths) + self.total_horizontal_border();
-                if total_width <= self.table_width {
-                    break;
-                }
-
-                let mut biggest_diff_to_median: isize = -1;
-                let mut biggest_diff_to_median_index: isize = -1;
-
-                for (j, width) in col_widths.iter().enumerate() {
-                    if *width == self.columns[j].fixed_width {
-                        continue;
-                    }
-                    let diff_to_median = *width as isize - self.columns[j].median as isize;
-                    if diff_to_median > 0 && diff_to_median > biggest_diff_to_median {
-                        biggest_diff_to_median = diff_to_median;
-                        biggest_diff_to_median_index = j as isize;
-                    }
-                }
-
-                if biggest_diff_to_median_index <= 0
-                    || col_widths[biggest_diff_to_median_index as usize] == 0
-                {
-                    break;
-                }
-                col_widths[biggest_diff_to_median_index as usize] -= 1;
+        let shrink_to_median = |col_widths: &mut Vec<usize>| loop {
+            let total_width = sum(col_widths) + self.total_horizontal_border();
+            if total_width <= self.table_width {
+                break;
             }
+
+            let mut biggest_diff_to_median: isize = -1;
+            let mut biggest_diff_to_median_index: isize = -1;
+
+            for (j, width) in col_widths.iter().enumerate() {
+                if *width == self.columns[j].fixed_width {
+                    continue;
+                }
+                let diff_to_median = *width as isize - self.columns[j].median as isize;
+                if diff_to_median > 0 && diff_to_median > biggest_diff_to_median {
+                    biggest_diff_to_median = diff_to_median;
+                    biggest_diff_to_median_index = j as isize;
+                }
+            }
+
+            if biggest_diff_to_median_index <= 0
+                || col_widths[biggest_diff_to_median_index as usize] == 0
+            {
+                break;
+            }
+            col_widths[biggest_diff_to_median_index as usize] -= 1;
         };
 
         shrink_biggest_columns(&mut col_widths, true);
@@ -252,7 +248,8 @@ impl Resizer {
                     continue;
                 }
                 let width = col_widths[j].saturating_sub(self.x_padding_for_col(j));
-                let height = self.detect_content_height(cell, width) + self.y_padding_for_cell(i, j);
+                let height =
+                    self.detect_content_height(cell, width) + self.y_padding_for_cell(i, j);
                 self.row_heights[i] = max(self.row_heights[i], height);
             }
         }
@@ -380,11 +377,15 @@ impl Resizer {
         // First add rows at the bottom until we reach the available height, or
         // the last row.
         while available > 0 && last_visible_row_index < last_index {
-            let row = self.row_heights[(last_visible_row_index + 1 + btoi(has_headers) as isize) as usize]
+            let row = self.row_heights
+                [(last_visible_row_index + 1 + btoi(has_headers) as isize) as usize]
                 + btoi(self.border_row);
             let overflow = if last_visible_row_index + 1 < last_index {
                 1 + btoi(self.border_row)
-                    + self.y_padding_for_cell((last_visible_row_index + 2 + btoi(has_headers) as isize) as usize, 0)
+                    + self.y_padding_for_cell(
+                        (last_visible_row_index + 2 + btoi(has_headers) as isize) as usize,
+                        0,
+                    )
             } else {
                 0
             };
@@ -401,9 +402,9 @@ impl Resizer {
             // Then add rows at the top until we reach the available height, or
             // the first row.
             while available > 0 && first_visible_row_index > 0 {
-                let row =
-                    self.row_heights[(first_visible_row_index - 1 + btoi(has_headers) as isize) as usize]
-                        + btoi(self.border_row);
+                let row = self.row_heights
+                    [(first_visible_row_index - 1 + btoi(has_headers) as isize) as usize]
+                    + btoi(self.border_row);
 
                 if (available - row as isize) < 0 {
                     break;
@@ -432,6 +433,7 @@ impl Resizer {
 }
 
 /// The entry point for table resizing used by `Table::string`.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn resize(
     data: &dyn Data,
     headers: &[String],
@@ -477,7 +479,11 @@ pub(crate) fn resize(
         r.y_paddings[i] = vec![0usize; row.len()];
 
         for (j, _) in row.iter().enumerate() {
-            let row_index = if has_headers { i as isize - 1 } else { i as isize };
+            let row_index = if has_headers {
+                i as isize - 1
+            } else {
+                i as isize
+            };
             let style = style_func(row_index, j);
 
             r.columns[j].x_padding = max(r.columns[j].x_padding, style.get_horizontal_frame_size());
@@ -490,7 +496,7 @@ pub(crate) fn resize(
 
     // A table width wasn't specified. In this case, detect according to content
     // width.
-    if r.table_width <= 0 {
+    if r.table_width == 0 {
         r.table_width = r.detect_table_width();
     }
 

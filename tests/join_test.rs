@@ -13,10 +13,7 @@ fn test_join_vertical() {
 
 #[test]
 fn test_join_horizontal() {
-    assert_eq!(
-        join_horizontal(TOP, &["A", "B\nB\nB\nB"]),
-        "AB\n B\n B\n B"
-    );
+    assert_eq!(join_horizontal(TOP, &["A", "B\nB\nB\nB"]), "AB\n B\n B\n B");
     assert_eq!(
         join_horizontal(BOTTOM, &["A", "B\nB\nB\nB"]),
         " B\n B\n B\nAB"

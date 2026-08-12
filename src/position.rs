@@ -142,9 +142,18 @@ mod tests {
 
     #[test]
     fn test_place_horizontal() {
-        assert_eq!(place_horizontal(10, Position::CENTER, "Hi", &[]), "    Hi    ");
-        assert_eq!(place_horizontal(10, Position::LEFT, "Hi", &[]), "Hi        ");
-        assert_eq!(place_horizontal(10, Position::RIGHT, "Hi", &[]), "        Hi");
+        assert_eq!(
+            place_horizontal(10, Position::CENTER, "Hi", &[]),
+            "    Hi    "
+        );
+        assert_eq!(
+            place_horizontal(10, Position::LEFT, "Hi", &[]),
+            "Hi        "
+        );
+        assert_eq!(
+            place_horizontal(10, Position::RIGHT, "Hi", &[]),
+            "        Hi"
+        );
     }
 
     #[test]
@@ -155,6 +164,9 @@ mod tests {
 
     #[test]
     fn test_place() {
-        assert_eq!(place(6, 3, Position::CENTER, Position::CENTER, "Hi", &[]), "      \n  Hi  \n      ");
+        assert_eq!(
+            place(6, 3, Position::CENTER, Position::CENTER, "Hi", &[]),
+            "      \n  Hi  \n      "
+        );
     }
 }

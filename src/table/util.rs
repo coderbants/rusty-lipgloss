@@ -34,7 +34,7 @@ pub(crate) fn median(n: &mut [usize]) -> usize {
     if n.is_empty() {
         return 0;
     }
-    if n.len() % 2 == 0 {
+    if n.len().is_multiple_of(2) {
         let h = n.len() / 2;
         (n[h - 1] + n[h]) / 2
     } else {

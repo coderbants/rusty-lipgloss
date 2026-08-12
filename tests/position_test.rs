@@ -31,8 +31,14 @@ fn test_blend_2d() {
 #[test]
 fn test_place_horizontal() {
     assert_eq!(place_horizontal(10, CENTER, "Hi", &[]), "    Hi    ");
-    assert_eq!(place_horizontal(10, Position::LEFT, "Hi", &[]), "Hi        ");
-    assert_eq!(place_horizontal(10, Position::RIGHT, "Hi", &[]), "        Hi");
+    assert_eq!(
+        place_horizontal(10, Position::LEFT, "Hi", &[]),
+        "Hi        "
+    );
+    assert_eq!(
+        place_horizontal(10, Position::RIGHT, "Hi", &[]),
+        "        Hi"
+    );
     assert_eq!(place_horizontal(2, CENTER, "Hi", &[]), "Hi");
 }
 

@@ -8,7 +8,8 @@
 
 use std::sync::Arc;
 
-use crate::tree::{Children, Tree};
+use crate::tree::renderer::StyleFunc;
+use crate::tree::Tree;
 
 use super::enumerator::{bullet, Enumerator, Indenter};
 
@@ -82,10 +83,7 @@ impl List {
     }
 
     /// EnumeratorStyleFunc sets the enumerator style function for the list items.
-    pub fn enumerator_style_func(
-        mut self,
-        f: Arc<dyn Fn(&dyn Children, usize) -> crate::style::Style>,
-    ) -> List {
+    pub fn enumerator_style_func(mut self, f: StyleFunc) -> List {
         self.tree = self.tree.enumerator_style_func(f);
         self
     }
@@ -97,10 +95,7 @@ impl List {
     }
 
     /// IndenterStyleFunc sets the indenter style function for the list items.
-    pub fn indenter_style_func(
-        mut self,
-        f: Arc<dyn Fn(&dyn Children, usize) -> crate::style::Style>,
-    ) -> List {
+    pub fn indenter_style_func(mut self, f: StyleFunc) -> List {
         self.tree = self.tree.indenter_style_func(f);
         self
     }
@@ -118,10 +113,7 @@ impl List {
     }
 
     /// ItemStyleFunc sets the item style function for the list items.
-    pub fn item_style_func(
-        mut self,
-        f: Arc<dyn Fn(&dyn Children, usize) -> crate::style::Style>,
-    ) -> List {
+    pub fn item_style_func(mut self, f: StyleFunc) -> List {
         self.tree = self.tree.item_style_func(f);
         self
     }
@@ -134,15 +126,19 @@ impl List {
 
     /// Items appends multiple items to the list.
     pub fn items(mut self, items: &[&str]) -> List {
-        let children: Vec<crate::tree::Child> =
-            items.iter().map(|i| crate::tree::Child::Str(i.to_string())).collect();
+        let children: Vec<crate::tree::Child> = items
+            .iter()
+            .map(|i| crate::tree::Child::Str(i.to_string()))
+            .collect();
         self.tree = self.tree.child_nodes(&children);
         self
     }
 
     /// Adds a nested sub-list as an item of this list.
     pub fn child_list(mut self, sub: List) -> List {
-        self.tree = self.tree.child(crate::tree::Child::Tree(sub.tree));
+        self.tree = self
+            .tree
+            .child(crate::tree::Child::Tree(Box::new(sub.tree)));
         self
     }
 

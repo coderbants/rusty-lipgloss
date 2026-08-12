@@ -13,7 +13,7 @@ read -r -a TESTDATA_WORDS <<< "$(grep -oE 'Test[A-Za-z0-9_]+' "$MAPPING" | sort 
 
 covered_by_glob() {
   local seg="$1"
-  for p in "${GLOB_PREFIXES[@]}"; do
+  for p in ${GLOB_PREFIXES[@]+"${GLOB_PREFIXES[@]}"}; do
     if [[ "$seg" == "$p"* ]]; then
       return 0
     fi

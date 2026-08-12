@@ -140,6 +140,15 @@ fn join_string(strs: &[&str]) -> String {
     strs.join(" ")
 }
 
+/// <upstream-comment>String implements stringer for a Style, returning the rendered result based
+/// on the rules in this style. An underlying string value must be set with
+/// Style.SetString prior to using this method.</upstream-comment>
+impl std::fmt::Display for Style {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.render(""))
+    }
+}
+
 impl Style {
     /// <upstream-comment>NewStyle returns a new, empty Style. While it's syntactic sugar for the
     /// `Style{}` primitive, it's recommended to use this function for creating styles
@@ -170,13 +179,6 @@ impl Style {
     /// <upstream-comment>Value returns the raw, unformatted, underlying string value for this style.</upstream-comment>
     pub fn value(&self) -> &str {
         &self.value
-    }
-
-    /// <upstream-comment>String implements stringer for a Style, returning the rendered result based
-    /// on the rules in this style. An underlying string value must be set with
-    /// Style.SetString prior to using this method.</upstream-comment>
-    pub fn to_string(&self) -> String {
-        self.render("")
     }
 
     /// Renders the underlying string value.
@@ -320,9 +322,8 @@ impl Style {
         let max_width = self.get_as_int(MAX_WIDTH_KEY);
         let max_height = self.get_as_int(MAX_HEIGHT_KEY);
 
-        let underline_spaces =
-            self.get_as_bool(UNDERLINE_SPACES_KEY, false)
-                || (underline && self.get_as_bool(UNDERLINE_SPACES_KEY, true));
+        let underline_spaces = self.get_as_bool(UNDERLINE_SPACES_KEY, false)
+            || (underline && self.get_as_bool(UNDERLINE_SPACES_KEY, true));
         let strikethrough_spaces = self.get_as_bool(STRIKETHROUGH_SPACES_KEY, false)
             || (strikethrough && self.get_as_bool(STRIKETHROUGH_SPACES_KEY, true));
 
@@ -330,10 +331,8 @@ impl Style {
         let style_whitespace = reverse;
 
         // Do we need to style spaces separately?
-        let use_space_styler = (underline && !underline_spaces)
-            || (strikethrough && !strikethrough_spaces)
-            || underline_spaces
-            || strikethrough_spaces;
+        let use_space_styler =
+            underline || underline_spaces || strikethrough || strikethrough_spaces;
 
         let transform = self.get_as_transform(TRANSFORM_KEY);
         let (link, link_params) = self.get_hyperlink();
@@ -827,7 +826,7 @@ impl Style {
     /// <upstream-comment>Border is shorthand for setting the border style and which sides should
     /// have a border at once.</upstream-comment>
     pub fn border(mut self, b: Border, sides: &[bool]) -> Style {
-        self.set(BORDER_STYLE_KEY, Value::Border(b));
+        self.set(BORDER_STYLE_KEY, Value::Border(Box::new(b)));
         let (top, right, bottom, left, ok) = which_sides_bool(sides);
         let (top, right, bottom, left) = if ok {
             (top, right, bottom, left)
@@ -843,7 +842,7 @@ impl Style {
 
     /// <upstream-comment>BorderStyle defines the Border on a style.</upstream-comment>
     pub fn border_style(mut self, b: Border) -> Style {
-        self.set(BORDER_STYLE_KEY, Value::Border(b));
+        self.set(BORDER_STYLE_KEY, Value::Border(Box::new(b)));
         self
     }
 
@@ -1481,7 +1480,9 @@ impl Style {
     /// <upstream-comment>GetHorizontalFrameSize returns the sum of the style's horizontal margins, padding
     /// and border widths.</upstream-comment>
     pub fn get_horizontal_frame_size(&self) -> usize {
-        self.get_horizontal_margins() + self.get_horizontal_padding() + self.get_horizontal_border_size()
+        self.get_horizontal_margins()
+            + self.get_horizontal_padding()
+            + self.get_horizontal_border_size()
     }
 
     /// <upstream-comment>GetVerticalFrameSize returns the sum of the style's vertical margins, padding
@@ -1493,7 +1494,10 @@ impl Style {
     /// <upstream-comment>GetFrameSize returns the sum of the margins, padding and border width for
     /// both the horizontal and vertical margins.</upstream-comment>
     pub fn get_frame_size(&self) -> (usize, usize) {
-        (self.get_horizontal_frame_size(), self.get_vertical_frame_size())
+        (
+            self.get_horizontal_frame_size(),
+            self.get_vertical_frame_size(),
+        )
     }
 
     /// <upstream-comment>GetTransform returns the transform set on the style. If no transform is set
@@ -1960,7 +1964,7 @@ impl Style {
             }
             BORDER_STYLE_KEY => {
                 if let Value::Border(b) = value {
-                    self.border_style = b;
+                    self.border_style = *b;
                 }
             }
             BORDER_TOP_FOREGROUND_KEY => {
@@ -2123,28 +2127,49 @@ impl Style {
                 self.set(MARGIN_LEFT_KEY, Value::Int(i.margin_left));
             }
             MARGIN_BACKGROUND_KEY => {
-                self.set(MARGIN_BACKGROUND_KEY, Value::Color(i.margin_bg_color.clone()));
+                self.set(
+                    MARGIN_BACKGROUND_KEY,
+                    Value::Color(i.margin_bg_color.clone()),
+                );
             }
             MARGIN_CHAR_KEY => {
                 self.set(MARGIN_CHAR_KEY, Value::Char(i.margin_char));
             }
             BORDER_STYLE_KEY => {
-                self.set(BORDER_STYLE_KEY, Value::Border(i.border_style.clone()));
+                self.set(
+                    BORDER_STYLE_KEY,
+                    Value::Border(Box::new(i.border_style.clone())),
+                );
             }
             BORDER_TOP_FOREGROUND_KEY => {
-                self.set(BORDER_TOP_FOREGROUND_KEY, Value::Color(i.border_top_fg_color.clone()));
+                self.set(
+                    BORDER_TOP_FOREGROUND_KEY,
+                    Value::Color(i.border_top_fg_color.clone()),
+                );
             }
             BORDER_RIGHT_FOREGROUND_KEY => {
-                self.set(BORDER_RIGHT_FOREGROUND_KEY, Value::Color(i.border_right_fg_color.clone()));
+                self.set(
+                    BORDER_RIGHT_FOREGROUND_KEY,
+                    Value::Color(i.border_right_fg_color.clone()),
+                );
             }
             BORDER_BOTTOM_FOREGROUND_KEY => {
-                self.set(BORDER_BOTTOM_FOREGROUND_KEY, Value::Color(i.border_bottom_fg_color.clone()));
+                self.set(
+                    BORDER_BOTTOM_FOREGROUND_KEY,
+                    Value::Color(i.border_bottom_fg_color.clone()),
+                );
             }
             BORDER_LEFT_FOREGROUND_KEY => {
-                self.set(BORDER_LEFT_FOREGROUND_KEY, Value::Color(i.border_left_fg_color.clone()));
+                self.set(
+                    BORDER_LEFT_FOREGROUND_KEY,
+                    Value::Color(i.border_left_fg_color.clone()),
+                );
             }
             BORDER_FOREGROUND_BLEND_KEY => {
-                self.set(BORDER_FOREGROUND_BLEND_KEY, Value::Colors(i.border_blend_fg_color.clone()));
+                self.set(
+                    BORDER_FOREGROUND_BLEND_KEY,
+                    Value::Colors(i.border_blend_fg_color.clone()),
+                );
             }
             BORDER_FOREGROUND_BLEND_OFFSET_KEY => {
                 self.set(
@@ -2153,16 +2178,28 @@ impl Style {
                 );
             }
             BORDER_TOP_BACKGROUND_KEY => {
-                self.set(BORDER_TOP_BACKGROUND_KEY, Value::Color(i.border_top_bg_color.clone()));
+                self.set(
+                    BORDER_TOP_BACKGROUND_KEY,
+                    Value::Color(i.border_top_bg_color.clone()),
+                );
             }
             BORDER_RIGHT_BACKGROUND_KEY => {
-                self.set(BORDER_RIGHT_BACKGROUND_KEY, Value::Color(i.border_right_bg_color.clone()));
+                self.set(
+                    BORDER_RIGHT_BACKGROUND_KEY,
+                    Value::Color(i.border_right_bg_color.clone()),
+                );
             }
             BORDER_BOTTOM_BACKGROUND_KEY => {
-                self.set(BORDER_BOTTOM_BACKGROUND_KEY, Value::Color(i.border_bottom_bg_color.clone()));
+                self.set(
+                    BORDER_BOTTOM_BACKGROUND_KEY,
+                    Value::Color(i.border_bottom_bg_color.clone()),
+                );
             }
             BORDER_LEFT_BACKGROUND_KEY => {
-                self.set(BORDER_LEFT_BACKGROUND_KEY, Value::Color(i.border_left_bg_color.clone()));
+                self.set(
+                    BORDER_LEFT_BACKGROUND_KEY,
+                    Value::Color(i.border_left_bg_color.clone()),
+                );
             }
             MAX_WIDTH_KEY => {
                 self.set(MAX_WIDTH_KEY, Value::Int(i.max_width));
@@ -2174,7 +2211,10 @@ impl Style {
                 self.set(TAB_WIDTH_KEY, Value::Int(i.tab_width as usize));
             }
             TRANSFORM_KEY => {
-                self.set(TRANSFORM_KEY, Value::Transform(i.transform.unwrap_or(|s| s.to_string())));
+                self.set(
+                    TRANSFORM_KEY,
+                    Value::Transform(i.transform.unwrap_or(|s| s.to_string())),
+                );
             }
             _ => {
                 // Set attributes for set bool properties.
@@ -2390,7 +2430,12 @@ impl Style {
 
         // Render top.
         if has_top {
-            let top = border::render_horizontal_edge(&border.top_left, &border.top, &border.top_right, width);
+            let top = border::render_horizontal_edge(
+                &border.top_left,
+                &border.top,
+                &border.top_right,
+                width,
+            );
             if let Some(ref b) = blend {
                 out.push_str(&style_border_blend(&top, &b.top_gradient, &top_bg));
             } else {
@@ -2438,8 +2483,12 @@ impl Style {
 
         // Render bottom.
         if has_bottom {
-            let bottom =
-                border::render_horizontal_edge(&border.bottom_left, &border.bottom, &border.bottom_right, width);
+            let bottom = border::render_horizontal_edge(
+                &border.bottom_left,
+                &border.bottom,
+                &border.bottom_right,
+                width,
+            );
             out.push('\n');
             if let Some(ref b) = blend {
                 out.push_str(&style_border_blend(&bottom, &b.bottom_gradient, &bottom_bg));
@@ -2451,7 +2500,12 @@ impl Style {
         out
     }
 
-    fn border_blend(&self, width: usize, height: usize, colors: &[Color]) -> crate::border::BorderBlend {
+    fn border_blend(
+        &self,
+        width: usize,
+        height: usize,
+        colors: &[Color],
+    ) -> crate::border::BorderBlend {
         crate::border::BorderBlend::new(width, height, colors, self.border_foreground_blend_offset)
     }
 }
@@ -2463,7 +2517,7 @@ enum Value {
     Char(char),
     Color(Option<Color>),
     Colors(Vec<Color>),
-    Border(Border),
+    Border(Box<Border>),
     Position(Position),
     Underline(Underline),
     String(String),
@@ -2567,8 +2621,7 @@ fn style_border(border: &str, fg: &Color, bg: &Color) -> String {
 /// using blending.
 fn style_border_blend(border: &str, fg: &[Color], bg: &Color) -> String {
     let mut out = String::new();
-    let mut i = 0usize;
-    for g in unicode_segmentation::UnicodeSegmentation::graphemes(border, true) {
+    for (i, g) in unicode_segmentation::UnicodeSegmentation::graphemes(border, true).enumerate() {
         let mut style = ansi::Style::default();
         if !fg[i].is_no_color() {
             style.fg_color = Some(fg[i].clone());
@@ -2578,7 +2631,6 @@ fn style_border_blend(border: &str, fg: &[Color], bg: &Color) -> String {
         }
         out.push_str(&style.string());
         out.push_str(g);
-        i += 1;
     }
     out.push_str(ansi::RESET_STYLE);
     out
@@ -2617,8 +2669,14 @@ mod tests {
 
     #[test]
     fn test_blink_faint() {
-        assert_eq!(Style::new().blink(true).render("hello"), "\x1b[5mhello\x1b[m");
-        assert_eq!(Style::new().faint(true).render("hello"), "\x1b[2mhello\x1b[m");
+        assert_eq!(
+            Style::new().blink(true).render("hello"),
+            "\x1b[5mhello\x1b[m"
+        );
+        assert_eq!(
+            Style::new().faint(true).render("hello"),
+            "\x1b[2mhello\x1b[m"
+        );
     }
 
     #[test]
@@ -2643,8 +2701,13 @@ mod tests {
 
     #[test]
     fn test_hyperlink() {
-        let s = Style::new().hyperlink("https://example.com", &[]).set_string(&["https://example.com"]);
-        assert_eq!(s.render(""), "\x1b]8;;https://example.com\x07https://example.com\x1b]8;;\x07");
+        let s = Style::new()
+            .hyperlink("https://example.com", &[])
+            .set_string(&["https://example.com"]);
+        assert_eq!(
+            s.render(""),
+            "\x1b]8;;https://example.com\x07https://example.com\x1b]8;;\x07"
+        );
     }
 
     #[test]

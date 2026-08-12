@@ -52,7 +52,11 @@ fn main() {
             }
 
             // Arabic is a right-to-left language, so right align the text.
-            if row >= 0 && (row as usize) < rows_clone.len() && rows_clone[row as usize][0] == "Arabic" && col != 0 {
+            if row >= 0
+                && (row as usize) < rows_clone.len()
+                && rows_clone[row as usize][0] == "Arabic"
+                && col != 0
+            {
                 style = style.align(&[Position::RIGHT]);
             }
 
@@ -60,10 +64,14 @@ fn main() {
         }));
 
     for row in &rows {
-        let cells: Vec<&str> = row.iter().map(|s| *s).collect();
+        let cells: Vec<&str> = row.to_vec();
         t = t.row(&cells);
     }
-    t = t.row(&["English", "You look absolutely fabulous.", "How's it going?"]);
+    t = t.row(&[
+        "English",
+        "You look absolutely fabulous.",
+        "How's it going?",
+    ]);
 
     println(&t.string()).unwrap();
 }

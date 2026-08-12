@@ -52,31 +52,31 @@ pub fn join_horizontal(pos: Position, strs: &[&str]) -> String {
     }
 
     // Add extra lines to make each side the same height.
-    for i in 0..blocks.len() {
-        if blocks[i].len() >= max_height {
+    for block in &mut blocks {
+        if block.len() >= max_height {
             continue;
         }
-        let extra_lines = max_height - blocks[i].len();
+        let extra_lines = max_height - block.len();
         match pos {
             TOP => {
                 for _ in 0..extra_lines {
-                    blocks[i].push(String::new());
+                    block.push(String::new());
                 }
             }
             crate::align::BOTTOM => {
                 let mut pad = vec![String::new(); extra_lines];
-                pad.extend(blocks[i].drain(..));
-                blocks[i] = pad;
+                pad.append(block);
+                *block = pad;
             }
             _ => {
                 // Somewhere in the middle.
                 let split = (extra_lines as f64 * pos.value()).round() as usize;
                 let top = extra_lines - split;
                 let mut pad_top = vec![String::new(); split];
-                pad_top.extend(blocks[i].drain(..));
+                pad_top.append(block);
                 let mut full = pad_top;
                 full.extend(vec![String::new(); top]);
-                blocks[i] = full;
+                *block = full;
             }
         }
     }
@@ -178,10 +178,7 @@ mod tests {
     #[test]
     fn test_join_horizontal() {
         assert_eq!(join_horizontal(TOP, &["A", "B"]), "AB");
-        assert_eq!(
-            join_horizontal(TOP, &["A", "B\nB\nB\nB"]),
-            "AB\n B\n B\n B"
-        );
+        assert_eq!(join_horizontal(TOP, &["A", "B\nB\nB\nB"]), "AB\n B\n B\n B");
         assert_eq!(
             join_horizontal(crate::align::BOTTOM, &["A", "B\nB\nB\nB"]),
             " B\n B\n B\nAB"

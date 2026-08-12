@@ -50,6 +50,9 @@ mod tests {
         let matched = Style::new().bold(true);
         let unmatched = Style::new().faint(true);
         let out = style_runes("abcde", &[0, 2], &matched, &unmatched);
-        assert_eq!(out, "\x1b[1ma\x1b[m\x1b[2mb\x1b[m\x1b[1mc\x1b[m\x1b[2mde\x1b[m");
+        assert_eq!(
+            out,
+            "\x1b[1ma\x1b[m\x1b[2mb\x1b[m\x1b[1mc\x1b[m\x1b[2mde\x1b[m"
+        );
     }
 }

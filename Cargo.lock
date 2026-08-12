@@ -25,6 +25,7 @@ dependencies = [
 name = "charming-ultraviolet"
 version = "0.0.0-20260703014108"
 dependencies = [
+ "charming-colorprofile",
  "charming-x-ansi",
  "libc",
  "unicode-segmentation",

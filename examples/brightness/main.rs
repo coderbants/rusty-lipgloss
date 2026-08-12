@@ -42,7 +42,7 @@ fn main() {
                     .render("██"),
             );
         }
-        content.push_str("\n");
+        content.push('\n');
 
         // Create darkened variations.
         content.push_str("Darkened:  ");

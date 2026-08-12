@@ -15,7 +15,6 @@
 use charming_ultraviolet::{new_screen_buffer, Drawable, Rectangle, Screen, ScreenBuffer};
 use charming_x_ansi::method::WidthMethod;
 
-
 /// <upstream-comment>Canvas is a cell-buffer that can be used to compose and draw drawables
 /// like layers.
 ///
@@ -127,11 +126,7 @@ mod tests {
         let mut c = new_canvas(5, 3);
         assert_eq!(c.width(), 5);
         assert_eq!(c.height(), 3);
-        c.set_cell(
-            0,
-            0,
-            Some(&charming_ultraviolet::Cell::new("x")),
-        );
+        c.set_cell(0, 0, Some(&charming_ultraviolet::Cell::new("x")));
         assert_eq!(c.cell_at(0, 0).unwrap().content, "x");
         let out = c.render();
         // Trailing blank lines are emitted as empty lines (Go-verified

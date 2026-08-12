@@ -64,7 +64,7 @@ pub fn background_color(_in: &mut dyn Read, out: &mut dyn Write) -> Option<Color
             }
         }
         let _ = raw.restore();
-        return result;
+        result
     }
     #[cfg(not(unix))]
     {
