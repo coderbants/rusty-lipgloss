@@ -10,6 +10,15 @@
 set -u
 
 cd "$(dirname "$0")/.."
+# Shared machine-wide Cargo cache (see scripts/cargo-env.sh): the registry
+# cache, final artifacts, and intermediate state live in ~/.cache/cargo and
+# are reused by every Rust repository on this machine.
+. scripts/cargo-env.sh || exit 1
+configure_shared_cargo_cache_environment || {
+  echo "ERROR: failed to configure the shared Cargo cache environment" >&2
+  exit 1
+}
+
 ROOT="$PWD"
 UPSTREAM="$ROOT/upstream-go/examples"
 TMP="$(mktemp -d)"
