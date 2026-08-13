@@ -8,7 +8,7 @@
 use std::collections::HashMap;
 
 use crate::size;
-use charming_ultraviolet::{Drawable, Rectangle, Screen};
+use rusty_ultraviolet::{Drawable, Rectangle, Screen};
 
 /// <upstream-comment>Layer represents a visual layer with content and positioning. It's a pure
 /// data structure that defines the layer hierarchy without any computation.</upstream-comment>
@@ -144,7 +144,7 @@ impl Layer {
     /// Draw draws the content of the layer on the screen at the specified
     /// area.
     pub fn draw(&self, scr: &mut dyn Screen, area: Rectangle) {
-        let content = charming_ultraviolet::new_styled_string(&self.content);
+        let content = rusty_ultraviolet::new_styled_string(&self.content);
         content.draw(scr, area);
     }
 
@@ -370,7 +370,7 @@ impl Compositor {
 
 impl Drawable for Layer {
     fn draw(&mut self, scr: &mut dyn Screen, area: Rectangle) {
-        let content = charming_ultraviolet::new_styled_string(&self.content);
+        let content = rusty_ultraviolet::new_styled_string(&self.content);
         content.draw(scr, area);
     }
 }

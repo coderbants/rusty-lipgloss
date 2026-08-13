@@ -1,6 +1,6 @@
-# Contributing to `charming-lipgloss`
+# Contributing to `rusty-lipgloss`
 
-Thanks for your interest in contributing! `charming-lipgloss` is a cleanroom Rust port of
+Thanks for your interest in contributing! `rusty-lipgloss` is a cleanroom Rust port of
 the upstream Go [charmbracelet/lipgloss](https://github.com/charmbracelet/lipgloss)
 styling library, pinned to upstream tag `v2.0.5`.
 

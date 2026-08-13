@@ -5,18 +5,18 @@
 //! a dialog box, lists, a color grid, marmalade history, and a status bar,
 //! composed together with a floating modal.
 
-use charming_lipgloss::align::{BOTTOM, CENTER, LEFT, RIGHT, TOP};
-use charming_lipgloss::blending::blend_1d;
-use charming_lipgloss::border::Border;
-use charming_lipgloss::color::Color;
-use charming_lipgloss::join::{join_horizontal, join_vertical};
-use charming_lipgloss::layer::{new_compositor, new_layer};
-use charming_lipgloss::position;
-use charming_lipgloss::query;
-use charming_lipgloss::size;
-use charming_lipgloss::style::Style;
-use charming_lipgloss::whitespace::{with_whitespace_chars, with_whitespace_style, Whitespace};
-use charming_lipgloss::writer::println;
+use rusty_lipgloss::align::{BOTTOM, CENTER, LEFT, RIGHT, TOP};
+use rusty_lipgloss::blending::blend_1d;
+use rusty_lipgloss::border::Border;
+use rusty_lipgloss::color::Color;
+use rusty_lipgloss::join::{join_horizontal, join_vertical};
+use rusty_lipgloss::layer::{new_compositor, new_layer};
+use rusty_lipgloss::position;
+use rusty_lipgloss::query;
+use rusty_lipgloss::size;
+use rusty_lipgloss::style::Style;
+use rusty_lipgloss::whitespace::{with_whitespace_chars, with_whitespace_style, Whitespace};
+use rusty_lipgloss::writer::println;
 
 /// The document width used for the layout.
 const WIDTH: usize = 96;
@@ -413,7 +413,7 @@ fn debug_doc(doc: &str) {
             "doc line {}: {} | width={}",
             i,
             line,
-            charming_lipgloss::size::width(line)
+            rusty_lipgloss::size::width(line)
         );
     }
 }

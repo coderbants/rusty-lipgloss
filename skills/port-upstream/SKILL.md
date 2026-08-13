@@ -1,4 +1,4 @@
-# Upstream Porting & Synchronization Guide (`charming-lipgloss`)
+# Upstream Porting & Synchronization Guide (`rusty-lipgloss`)
 
 This skill provides step-by-step instructions and automated helper scripts for fetching upstream Go [`charmbracelet/lipgloss`](https://github.com/charmbracelet/lipgloss), storing the local Go source copy inside `upstream-go/`, diffing release versions, porting changes into Rust, running test verification, updating crate version tags, and committing back to Git.
 
@@ -8,7 +8,7 @@ This skill provides step-by-step instructions and automated helper scripts for f
 
 The canonical local upstream Go source code is stored inside the repository at:
 ```
-charming-lipgloss/upstream-go/
+rusty-lipgloss/upstream-go/
 ```
 This folder contains the complete checked-out Go source code of `charmbracelet/lipgloss` matching the currently ported release tag (e.g. `v2.0.5`).
 
@@ -78,14 +78,14 @@ Once the Rust porting pass and tests are verified:
 3. **Commit & Tag Release**:
    ```bash
    git add -A
-   git commit -m "chore: sync charming-lipgloss to upstream lipgloss vX.Y.Z
+   git commit -m "chore: sync rusty-lipgloss to upstream lipgloss vX.Y.Z
 
    - Update local upstream-go/ source to vX.Y.Z
    - Port upstream diffs to src/
    - Enforce test parity in tests/
 
-   Mutate-Request: 000123-Chrm-charming-lipgloss"
+   Mutate-Request: 000123-Chrm-rusty-lipgloss"
 
-   git tag -a "vX.Y.Z" -m "charming-lipgloss vX.Y.Z matching upstream charmbracelet/lipgloss"
+   git tag -a "vX.Y.Z" -m "rusty-lipgloss vX.Y.Z matching upstream charmbracelet/lipgloss"
    git push origin main --tags
    ```

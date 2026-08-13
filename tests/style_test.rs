@@ -1,10 +1,10 @@
 //! Cleanroom Rust port of upstream Go test file: `style_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::ansi::Underline;
-use charming_lipgloss::border::Border;
-use charming_lipgloss::size;
-use charming_lipgloss::style::Style;
+use rusty_lipgloss::ansi::Underline;
+use rusty_lipgloss::border::Border;
+use rusty_lipgloss::size;
+use rusty_lipgloss::style::Style;
 
 #[test]
 fn test_style_render_bold() {
@@ -152,7 +152,7 @@ fn test_inherit() {
     assert!(inherited.get_italic());
     assert_eq!(
         inherited.get_foreground(),
-        charming_lipgloss::color::Color::parse("#ffffff")
+        rusty_lipgloss::color::Color::parse("#ffffff")
     );
 }
 

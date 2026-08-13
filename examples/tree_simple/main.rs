@@ -3,8 +3,8 @@
 //!
 //! A simple operating-systems tree.
 
-use charming_lipgloss::tree::{self, Child};
-use charming_lipgloss::writer::println;
+use rusty_lipgloss::tree::{self, Child};
+use rusty_lipgloss::writer::println;
 
 fn main() {
     let linux = tree::root("Linux")

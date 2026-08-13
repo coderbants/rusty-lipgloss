@@ -6,10 +6,10 @@
 
 use std::sync::Arc;
 
-use charming_lipgloss::list::{self, List};
-use charming_lipgloss::style::Style;
-use charming_lipgloss::tree::Children;
-use charming_lipgloss::writer::println;
+use rusty_lipgloss::list::{self, List};
+use rusty_lipgloss::style::Style;
+use rusty_lipgloss::tree::Children;
+use rusty_lipgloss::writer::println;
 
 const PURCHASED: [&str; 9] = [
     "Bananas",

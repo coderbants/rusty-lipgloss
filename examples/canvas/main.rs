@@ -3,12 +3,12 @@
 //!
 //! Composes layers with z-ordering onto a canvas via a compositor.
 
-use charming_lipgloss::border::Border;
-use charming_lipgloss::color::Color;
-use charming_lipgloss::layer::{new_compositor, new_layer, Layer};
-use charming_lipgloss::query;
-use charming_lipgloss::style::Style;
-use charming_lipgloss::writer::println;
+use rusty_lipgloss::border::Border;
+use rusty_lipgloss::color::Color;
+use rusty_lipgloss::layer::{new_compositor, new_layer, Layer};
+use rusty_lipgloss::query;
+use rusty_lipgloss::style::Style;
+use rusty_lipgloss::writer::println;
 
 /// Fills a rectangular area with a given character in a given color.
 fn new_field(rows: usize, cols: usize, color: &str) -> String {
@@ -36,7 +36,7 @@ fn new_card(dark_mode: bool, text: &str) -> String {
         .height(9)
         .width(16)
         .padding_top(3)
-        .align(&[charming_lipgloss::align::CENTER])
+        .align(&[rusty_lipgloss::align::CENTER])
         .render(text)
 }
 

@@ -1,8 +1,8 @@
 //! Cleanroom Rust port of upstream Go test file: `blending_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::blending::{blend_1d, blend_2d};
-use charming_lipgloss::color::Color;
+use rusty_lipgloss::blending::{blend_1d, blend_2d};
+use rusty_lipgloss::color::Color;
 
 fn rgba(r: u8, g: u8, b: u8) -> Color {
     Color::TrueColor { r, g, b }

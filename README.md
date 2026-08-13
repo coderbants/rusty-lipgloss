@@ -1,14 +1,16 @@
 <p>
-    <a href="charming-lipgloss.png"><img src="charming-lipgloss.png" width="313" alt="Charming Lip Gloss"></a><br>
-    <a href="https://crates.io/crates/charming-lipgloss"><img src="https://img.shields.io/crates/v/charming-lipgloss.svg" alt="crates.io"></a>
-    <a href="https://github.com/coderbants/charming-lipgloss/actions"><img src="https://github.com/coderbants/charming-lipgloss/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
+    <a href="rusty-lipgloss.png"><img src="rusty-lipgloss.png" width="313" alt="Rusty Lip Gloss"></a><br>
+    <a href="https://crates.io/crates/rusty-lipgloss"><img src="https://img.shields.io/crates/v/rusty-lipgloss.svg" alt="crates.io"></a>
+    <a href="https://github.com/coderbants/rusty-lipgloss/actions"><img src="https://github.com/coderbants/rusty-lipgloss/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
 </p>
 
-# Charming Lip Gloss (`charming-lipgloss`)
+# Rusty Lip Gloss (`rusty-lipgloss`)
 
-**Charming Lip Gloss** is a complete, from-scratch Rust port of [Lip Gloss](https://github.com/charmbracelet/lipgloss), the styling library that powers Charmbracelet's terminal apps. It tracks upstream Go releases on a rolling basis. **Version policy: the crate version and every release tag must equal the tracked upstream version exactly — never ahead, never behind** (enforced by `scripts/verify_upstream_version.sh` in CI and on every release). It holds a hard goal of **1:1 behavioural, visual and license parity**: the same styles, rendering output, and layout semantics, favoring fidelity to upstream over Rust-native rewrites whenever the two would diverge.
+**Rusty Lip Gloss** is a complete, from-scratch Rust port of [Lip Gloss](https://github.com/charmbracelet/lipgloss), the styling library that powers Charmbracelet's terminal apps. It tracks upstream Go releases on a rolling basis. **Version policy: the crate version and every release tag must equal the tracked upstream version exactly — never ahead, never behind** (enforced by `scripts/verify_upstream_version.sh` in CI and on every release). It holds a hard goal of **1:1 behavioural, visual and license parity**: the same styles, rendering output, and layout semantics, favoring fidelity to upstream over Rust-native rewrites whenever the two would diverge.
 
-It's part of the Charming port family of the Bubble Tea ecosystem and builds on [charming-ultraviolet](https://github.com/coderbants/charming-ultraviolet) (terminal renderer & input), [charming-x-ansi](https://github.com/coderbants/charming-x-ansi) (ANSI primitives), and [charming-colorprofile](https://github.com/coderbants/charming-colorprofile) — with UI components available in [charming-bubbles](https://github.com/coderbants/charming-bubbles) and the framework in [charming-bubbletea](https://github.com/coderbants/charming-bubbletea).
+It's part of the Rusty port family of the Bubble Tea ecosystem and builds on [rusty-ultraviolet](https://github.com/coderbants/rusty-ultraviolet) (terminal renderer & input), [rusty-x-ansi](https://github.com/coderbants/rusty-x-ansi) (ANSI primitives), and [rusty-colorprofile](https://github.com/coderbants/rusty-colorprofile) — with UI components available in [rusty-bubbles](https://github.com/coderbants/rusty-bubbles) and the framework in [rusty-bubbletea](https://github.com/coderbants/rusty-bubbletea).
+
+***About Lip Gloss***
 
 Style, format and layout tools for terminal applications. Built for Rust based on upstream [charmbracelet/lipgloss](https://github.com/charmbracelet/lipgloss).
 
@@ -18,7 +20,7 @@ Style, format and layout tools for terminal applications. Built for Rust based o
 
 ## Overview
 
-Charming Lip Gloss gives you a small, fast, dependency-free toolkit for styling and laying out terminal output:
+Rusty Lip Gloss gives you a small, fast, dependency-free toolkit for styling and laying out terminal output:
 
 - **Styles** — colors, bold/italic/underline, backgrounds, borders, margins, padding and alignment, all composed with a fluent builder API.
 - **Text layout** — width and height control, word wrapping, truncation, and horizontal/vertical alignment.
@@ -29,17 +31,17 @@ Charming Lip Gloss gives you a small, fast, dependency-free toolkit for styling 
 ## Installation
 
 ```sh
-cargo add charming-lipgloss
+cargo add rusty-lipgloss
 ```
 
 Use the crate to style, format and lay out terminal text:
 
 ```rust
-use charming_lipgloss::new_style;
+use rusty_lipgloss::new_style;
 let styled = new_style().bold(true).foreground("63").render("hello");
 ```
 
-`charming-lipgloss` provides styling, layout, string joining, border rendering, tables, trees, and lists for terminal UI applications in lightweight, zero-unsafe, minimal-dependency Rust.
+`rusty-lipgloss` provides styling, layout, string joining, border rendering, tables, trees, and lists for terminal UI applications in lightweight, zero-unsafe, minimal-dependency Rust.
 
 ## Principles
 
@@ -53,7 +55,7 @@ let styled = new_style().bold(true).foreground("63").render("hello");
 Style text, then compose it into larger layouts:
 
 ```rust
-use charming_lipgloss::{
+use rusty_lipgloss::{
     Border, Position, new_style, join_vertical, BOTTOM, CENTER, LEFT, RIGHT, TOP,
 };
 
@@ -61,7 +63,7 @@ use charming_lipgloss::{
 let title = new_style()
     .bold(true)
     .foreground("#FF0000")
-    .render("Hello Charming Lipgloss!");
+    .render("Hello Rusty Lipgloss!");
 
 // A block with a border, padded and aligned.
 let panel = new_style()
@@ -76,7 +78,7 @@ let layout = join_vertical(TOP, &[title, panel]);
 println!("{layout}");
 ```
 
-Styles compose: set a background on one style and inherit it into another with `inherit`, render bordered tables with `charming_lipgloss::table`, and lay out lists with `charming_lipgloss::list`. See the [examples](https://github.com/coderbants/charming-lipgloss/tree/dev/examples) directory for complete programs.
+Styles compose: set a background on one style and inherit it into another with `inherit`, render bordered tables with `rusty_lipgloss::table`, and lay out lists with `rusty_lipgloss::list`. See the [examples](https://github.com/coderbants/rusty-lipgloss/tree/dev/examples) directory for complete programs.
 
 ## License
 

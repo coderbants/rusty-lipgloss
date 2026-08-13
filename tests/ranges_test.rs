@@ -1,8 +1,8 @@
 //! Cleanroom Rust port of upstream Go test file: `ranges_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::ranges::{new_range, style_ranges};
-use charming_lipgloss::style::Style;
+use rusty_lipgloss::ranges::{new_range, style_ranges};
+use rusty_lipgloss::style::Style;
 
 #[test]
 fn test_style_ranges_basic() {

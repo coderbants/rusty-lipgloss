@@ -1,10 +1,10 @@
 //! Cleanroom Rust port of upstream Go test files: `position_test.go` (via `align_test.go`)
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::align::{Position, BOTTOM, CENTER, TOP};
-use charming_lipgloss::blending::{blend_1d, blend_2d};
-use charming_lipgloss::color::Color;
-use charming_lipgloss::position::{place, place_horizontal, place_vertical};
+use rusty_lipgloss::align::{Position, BOTTOM, CENTER, TOP};
+use rusty_lipgloss::blending::{blend_1d, blend_2d};
+use rusty_lipgloss::color::Color;
+use rusty_lipgloss::position::{place, place_horizontal, place_vertical};
 
 #[test]
 fn test_blend_1d() {

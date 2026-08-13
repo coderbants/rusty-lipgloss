@@ -4,12 +4,12 @@
 //! Detects the terminal background color and chooses light or dark colors
 //! accordingly, in a standalone (non-Bubble Tea) fashion.
 
-use charming_lipgloss::align::CENTER;
-use charming_lipgloss::border::Border;
-use charming_lipgloss::join::join_vertical;
-use charming_lipgloss::query;
-use charming_lipgloss::style::Style;
-use charming_lipgloss::writer::println;
+use rusty_lipgloss::align::CENTER;
+use rusty_lipgloss::border::Border;
+use rusty_lipgloss::join::join_vertical;
+use rusty_lipgloss::query;
+use rusty_lipgloss::style::Style;
+use rusty_lipgloss::writer::println;
 
 fn pick<'a>(dark: bool, light: &'a str, dark_c: &'a str) -> &'a str {
     if dark {

@@ -6,14 +6,14 @@
 //! Composed drawables are drawn onto the canvas in the order they were
 //! composed, meaning later drawables will appear "on top" of earlier ones.
 //!
-//! The canvas wraps a [charming_ultraviolet::ScreenBuffer] and implements
-//! the ultraviolet [charming_ultraviolet::Screen] and
-//! [charming_ultraviolet::Drawable] interfaces, mirroring the upstream
+//! The canvas wraps a [rusty_ultraviolet::ScreenBuffer] and implements
+//! the ultraviolet [rusty_ultraviolet::Screen] and
+//! [rusty_ultraviolet::Drawable] interfaces, mirroring the upstream
 //! `Canvas` struct.
 //! </public-docs>
 
-use charming_ultraviolet::{new_screen_buffer, Drawable, Rectangle, Screen, ScreenBuffer};
-use charming_x_ansi::method::WidthMethod;
+use rusty_ultraviolet::{new_screen_buffer, Drawable, Rectangle, Screen, ScreenBuffer};
+use rusty_x_ansi::method::WidthMethod;
 
 /// <upstream-comment>Canvas is a cell-buffer that can be used to compose and draw drawables
 /// like layers.
@@ -65,12 +65,12 @@ impl Canvas {
     }
 
     /// <upstream-comment>CellAt returns the cell at the given position.</upstream-comment>
-    pub fn cell_at(&self, x: usize, y: usize) -> Option<&charming_ultraviolet::Cell> {
+    pub fn cell_at(&self, x: usize, y: usize) -> Option<&rusty_ultraviolet::Cell> {
         self.scr.cell_at(x, y)
     }
 
     /// <upstream-comment>SetCell sets the cell at the given position.</upstream-comment>
-    pub fn set_cell(&mut self, x: usize, y: usize, cell: Option<&charming_ultraviolet::Cell>) {
+    pub fn set_cell(&mut self, x: usize, y: usize, cell: Option<&rusty_ultraviolet::Cell>) {
         self.scr.set_cell(x, y, cell);
     }
 
@@ -97,10 +97,10 @@ impl Screen for Canvas {
     fn bounds(&self) -> Rectangle {
         self.bounds()
     }
-    fn cell_at(&self, x: usize, y: usize) -> Option<&charming_ultraviolet::Cell> {
+    fn cell_at(&self, x: usize, y: usize) -> Option<&rusty_ultraviolet::Cell> {
         self.cell_at(x, y)
     }
-    fn set_cell(&mut self, x: usize, y: usize, c: Option<&charming_ultraviolet::Cell>) {
+    fn set_cell(&mut self, x: usize, y: usize, c: Option<&rusty_ultraviolet::Cell>) {
         self.set_cell(x, y, c)
     }
     fn width_method(&self) -> WidthMethod {
@@ -126,7 +126,7 @@ mod tests {
         let mut c = new_canvas(5, 3);
         assert_eq!(c.width(), 5);
         assert_eq!(c.height(), 3);
-        c.set_cell(0, 0, Some(&charming_ultraviolet::Cell::new("x")));
+        c.set_cell(0, 0, Some(&rusty_ultraviolet::Cell::new("x")));
         assert_eq!(c.cell_at(0, 0).unwrap().content, "x");
         let out = c.render();
         // Trailing blank lines are emitted as empty lines (Go-verified
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn test_canvas_clear() {
         let mut c = new_canvas(5, 3);
-        c.set_cell(0, 0, Some(&charming_ultraviolet::Cell::new("x")));
+        c.set_cell(0, 0, Some(&rusty_ultraviolet::Cell::new("x")));
         c.clear();
         assert_eq!(c.cell_at(0, 0).unwrap().content, " ");
     }

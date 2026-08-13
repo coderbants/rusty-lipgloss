@@ -5,8 +5,8 @@
 
 use std::sync::Arc;
 
-use charming_lipgloss::list::{self, roman};
-use charming_lipgloss::writer::println;
+use rusty_lipgloss::list::{self, roman};
+use rusty_lipgloss::writer::println;
 
 fn main() {
     let sub = list::new(&["D", "E", "F"]).enumerator(Arc::new(roman));

@@ -3,11 +3,11 @@
 //!
 //! A table of greetings in various languages with styled rows and borders.
 
-use charming_lipgloss::align::Position;
-use charming_lipgloss::border::Border;
-use charming_lipgloss::style::Style;
-use charming_lipgloss::table::{self, HEADER_ROW};
-use charming_lipgloss::writer::println;
+use rusty_lipgloss::align::Position;
+use rusty_lipgloss::border::Border;
+use rusty_lipgloss::style::Style;
+use rusty_lipgloss::table::{self, HEADER_ROW};
+use rusty_lipgloss::writer::println;
 
 const PURPLE: &str = "99";
 const GRAY: &str = "245";

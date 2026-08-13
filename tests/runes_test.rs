@@ -1,8 +1,8 @@
 //! Cleanroom Rust port of upstream Go test file: `runes_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::runes::style_runes;
-use charming_lipgloss::style::Style;
+use rusty_lipgloss::runes::style_runes;
+use rusty_lipgloss::style::Style;
 
 #[test]
 fn test_style_runes_matched_unmatched() {

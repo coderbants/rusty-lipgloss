@@ -316,11 +316,11 @@ pub fn light_dark(is_dark: bool) -> impl Fn(Color, Color) -> Color {
 ///     lipgloss.Color("#ff34ac"), // TrueColor
 /// )
 /// ```</upstream-comment>
-pub fn complete(profile: charming_colorprofile::Profile) -> impl Fn(Color, Color, Color) -> Color {
+pub fn complete(profile: rusty_colorprofile::Profile) -> impl Fn(Color, Color, Color) -> Color {
     move |ansi, ansi256, truecolor| match profile {
-        charming_colorprofile::Profile::Ansi => ansi,
-        charming_colorprofile::Profile::Ansi256 => ansi256,
-        charming_colorprofile::Profile::TrueColor => truecolor,
+        rusty_colorprofile::Profile::Ansi => ansi,
+        rusty_colorprofile::Profile::Ansi256 => ansi256,
+        rusty_colorprofile::Profile::TrueColor => truecolor,
         _ => Color::NoColor,
     }
 }

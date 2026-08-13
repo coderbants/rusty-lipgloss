@@ -1,8 +1,8 @@
 //! Cleanroom Rust port of upstream Go test file: `join_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::align::{Position, BOTTOM, CENTER, LEFT, RIGHT, TOP};
-use charming_lipgloss::join::{join_horizontal, join_vertical};
+use rusty_lipgloss::align::{Position, BOTTOM, CENTER, LEFT, RIGHT, TOP};
+use rusty_lipgloss::join::{join_horizontal, join_vertical};
 
 #[test]
 fn test_join_vertical() {

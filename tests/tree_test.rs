@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use charming_lipgloss::tree::{rounded_enumerator, Child, Tree};
+use rusty_lipgloss::tree::{rounded_enumerator, Child, Tree};
 
 fn t(value: &str) -> Tree {
     Tree::new().root(value)

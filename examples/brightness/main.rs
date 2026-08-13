@@ -4,10 +4,10 @@
 //! Demonstrates the Lighten and Darken functions to create progressive
 //! brightness variations.
 
-use charming_lipgloss::color::{darken, lighten, Color};
-use charming_lipgloss::query;
-use charming_lipgloss::style::Style;
-use charming_lipgloss::writer::println;
+use rusty_lipgloss::color::{darken, lighten, Color};
+use rusty_lipgloss::query;
+use rusty_lipgloss::style::Style;
+use rusty_lipgloss::writer::println;
 
 fn main() {
     let has_dark_bg = query::has_dark_background();

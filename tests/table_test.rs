@@ -1,8 +1,8 @@
 //! Cleanroom Rust port of upstream Go test file: `table/table_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::border::Border;
-use charming_lipgloss::table::Table;
+use rusty_lipgloss::border::Border;
+use rusty_lipgloss::table::Table;
 
 #[test]
 fn test_table_render() {
@@ -41,7 +41,7 @@ fn test_table_width() {
         .headers(&["Name", "Age"])
         .row(&["Alice", "30"]);
     let out = t.render();
-    assert_eq!(charming_lipgloss::size::width(&out), 30);
+    assert_eq!(rusty_lipgloss::size::width(&out), 30);
 }
 
 #[test]
@@ -60,5 +60,5 @@ fn test_table_wrap_disabled() {
         .headers(&["Name"])
         .row(&["a very long name that must be truncated"]);
     let out = t.render();
-    assert!(charming_lipgloss::size::width(&out) <= 20);
+    assert!(rusty_lipgloss::size::width(&out) <= 20);
 }

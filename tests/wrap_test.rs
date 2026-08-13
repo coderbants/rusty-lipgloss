@@ -1,14 +1,14 @@
 //! Cleanroom Rust port of upstream Go test file: `wrap_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::wrap::wrap;
+use rusty_lipgloss::wrap::wrap;
 
 #[test]
 fn test_wrap_basic() {
     let s = "The quick brown fox jumps over the lazy dog";
     let out = wrap(s, 10, "");
     for line in out.lines() {
-        assert!(charming_lipgloss::size::width(line) <= 10);
+        assert!(rusty_lipgloss::size::width(line) <= 10);
     }
 }
 

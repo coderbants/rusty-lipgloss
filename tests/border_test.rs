@@ -1,7 +1,7 @@
 //! Cleanroom Rust port of upstream Go test file: `borders_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::border::{get_first_rune_as_string, max_rune_width, Border};
+use rusty_lipgloss::border::{get_first_rune_as_string, max_rune_width, Border};
 
 #[test]
 fn test_preset_borders() {

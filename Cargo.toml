@@ -1,14 +1,14 @@
 [package]
-name = "charming-lipgloss"
-version = "2.0.7"
+name = "rusty-lipgloss"
+version = "2.0.5"
 edition = "2021"
 description = "Cleanroom Rust port of Charmbracelet's Lip Gloss (v2.0.5) terminal styling library"
 license = "MIT"
 
 [dependencies]
-charming-colorprofile = { version = "0.4.5", path = "../charming-colorprofile" }
-charming-ultraviolet = { version = "0.0.0-20260813000000", path = "../charming-ultraviolet" }
-charming-x-ansi = { version = "0.0.0-20260813000000", path = "../charming-x-ansi" }
+rusty-colorprofile = { version = "0.4.3", path = "../rusty-colorprofile" }
+rusty-ultraviolet = { version = "0.0.0-20260703014108-f5a850f9c2b7", path = "../rusty-ultraviolet" }
+rusty-x-ansi = { version = "0.11.7", path = "../rusty-x-ansi" }
 unicode-segmentation = "1.10.1"
 unicode-width = "0.1"
 libc = "0.2"
@@ -16,5 +16,5 @@ libc = "0.2"
 [dev-dependencies]
 
 [lib]
-name = "charming_lipgloss"
+name = "rusty_lipgloss"
 path = "src/lib.rs"

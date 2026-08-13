@@ -1,7 +1,7 @@
 //! Cleanroom Rust port of upstream Go test file: `whitespace_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::whitespace::{with_whitespace_chars, Whitespace};
+use rusty_lipgloss::whitespace::{with_whitespace_chars, Whitespace};
 
 #[test]
 fn test_whitespace_render_with_tab() {

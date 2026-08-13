@@ -1,7 +1,7 @@
 //! Cleanroom Rust port of upstream Go test file: `color_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::color::{
+use rusty_lipgloss::color::{
     alpha, complementary, darken, lighten, AdaptiveColor, Color, CompleteColor,
 };
 

@@ -3,13 +3,13 @@
 //!
 //! Demonstrates 2D color gradients created with `blend_2d`.
 
-use charming_lipgloss::align::CENTER;
-use charming_lipgloss::blending::blend_2d;
-use charming_lipgloss::border::Border;
-use charming_lipgloss::color::Color;
-use charming_lipgloss::query;
-use charming_lipgloss::style::Style;
-use charming_lipgloss::writer::println;
+use rusty_lipgloss::align::CENTER;
+use rusty_lipgloss::blending::blend_2d;
+use rusty_lipgloss::border::Border;
+use rusty_lipgloss::color::Color;
+use rusty_lipgloss::query;
+use rusty_lipgloss::style::Style;
+use rusty_lipgloss::writer::println;
 
 struct Gradient {
     name: &'static str,

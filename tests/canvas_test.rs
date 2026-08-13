@@ -1,10 +1,10 @@
 //! Cleanroom Rust port of upstream Go test file: `canvas_test.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 
-use charming_lipgloss::canvas::{new_canvas, Canvas};
-use charming_lipgloss::layer::{new_compositor, new_layer};
-use charming_lipgloss::style::Style;
-use charming_ultraviolet::Cell;
+use rusty_lipgloss::canvas::{new_canvas, Canvas};
+use rusty_lipgloss::layer::{new_compositor, new_layer};
+use rusty_lipgloss::style::Style;
+use rusty_ultraviolet::Cell;
 
 #[test]
 fn test_canvas_new() {

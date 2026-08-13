@@ -1,7 +1,7 @@
-use charming_lipgloss::canvas::{new_canvas, Canvas};
-use charming_lipgloss::position::place;
-use charming_lipgloss::whitespace::{with_whitespace_chars, with_whitespace_style};
-use charming_lipgloss::{new_style, Color, LEFT, TOP};
+use rusty_lipgloss::canvas::{new_canvas, Canvas};
+use rusty_lipgloss::position::place;
+use rusty_lipgloss::whitespace::{with_whitespace_chars, with_whitespace_style};
+use rusty_lipgloss::{new_style, Color, LEFT, TOP};
 
 fn main() {
     let bg = place(
@@ -22,7 +22,7 @@ fn main() {
     let mut c: Canvas = new_canvas(60, 5);
 
     let bounds = c.bounds();
-    let comp = charming_ultraviolet::new_styled_string(&bg);
+    let comp = rusty_ultraviolet::new_styled_string(&bg);
     comp.draw(&mut c, bounds);
     let out = c.render();
     println!("CANVAS: {:?}", out);

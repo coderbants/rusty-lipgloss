@@ -3,9 +3,9 @@
 //!
 //! A minimal table with ANSI-styled cells.
 
-use charming_lipgloss::style::Style;
-use charming_lipgloss::table::Table;
-use charming_lipgloss::writer::println;
+use rusty_lipgloss::style::Style;
+use rusty_lipgloss::table::Table;
+use rusty_lipgloss::writer::println;
 
 fn main() {
     let s = |text: &str| Style::new().foreground("240").render(text);

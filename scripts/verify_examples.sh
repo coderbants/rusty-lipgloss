@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Example equivalence verification for charming-lipgloss.
+# Example equivalence verification for rusty-lipgloss.
 #
 # Compiles the upstream Go lipgloss examples (from upstream-go/, pinned at the
 # ported tag), captures their verbatim output, runs the corresponding Rust

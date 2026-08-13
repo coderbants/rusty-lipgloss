@@ -3,49 +3,49 @@
 version = 4
 
 [[package]]
-name = "charming-colorprofile"
-version = "0.4.5"
-dependencies = [
- "charming-x-ansi",
-]
-
-[[package]]
-name = "charming-lipgloss"
-version = "2.0.7"
-dependencies = [
- "charming-colorprofile",
- "charming-ultraviolet",
- "charming-x-ansi",
- "libc",
- "unicode-segmentation",
- "unicode-width",
-]
-
-[[package]]
-name = "charming-ultraviolet"
-version = "0.0.0-20260813000000"
-dependencies = [
- "charming-colorprofile",
- "charming-x-ansi",
- "libc",
- "unicode-segmentation",
- "unicode-width",
-]
-
-[[package]]
-name = "charming-x-ansi"
-version = "0.0.0-20260813000000"
-dependencies = [
- "libc",
- "unicode-segmentation",
- "unicode-width",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
+
+[[package]]
+name = "rusty-colorprofile"
+version = "0.4.3"
+dependencies = [
+ "rusty-x-ansi",
+]
+
+[[package]]
+name = "rusty-lipgloss"
+version = "2.0.5"
+dependencies = [
+ "libc",
+ "rusty-colorprofile",
+ "rusty-ultraviolet",
+ "rusty-x-ansi",
+ "unicode-segmentation",
+ "unicode-width",
+]
+
+[[package]]
+name = "rusty-ultraviolet"
+version = "0.0.0-20260703014108-f5a850f9c2b7"
+dependencies = [
+ "libc",
+ "rusty-colorprofile",
+ "rusty-x-ansi",
+ "unicode-segmentation",
+ "unicode-width",
+]
+
+[[package]]
+name = "rusty-x-ansi"
+version = "0.11.7"
+dependencies = [
+ "libc",
+ "unicode-segmentation",
+ "unicode-width",
+]
 
 [[package]]
 name = "unicode-segmentation"

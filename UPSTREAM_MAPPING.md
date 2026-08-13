@@ -1,4 +1,4 @@
-# Upstream Go File Mapping: `charming-lipgloss`
+# Upstream Go File Mapping: `rusty-lipgloss`
 
 Target Upstream Tag: `charmbracelet/lipgloss@v2.0.5`
 
@@ -123,7 +123,7 @@ fixtures:
 | Upstream Go Example | Rust Equivalent / Status | Notes / Description |
 | :--- | :--- | :--- |
 | `examples/color/standalone/main.go` | `examples/color_standalone/main.rs` | Standalone background detection + adaptive colors |
-| `examples/color/bubbletea/main.go` | Documented in mapping; Bubble Tea program | Interactive Bubble Tea example; requires `charming-bubbletea` runtime, see that repo |
+| `examples/color/bubbletea/main.go` | Documented in mapping; Bubble Tea program | Interactive Bubble Tea example; requires `rusty-bubbletea` runtime, see that repo |
 | `examples/layout/main.go` | `examples/layout/main.rs` | Full layout demo: tabs, title, dialog, lists, status bar |
 | `examples/list/simple/main.go` | `examples/list_simple/main.rs` | Nested list with Roman enumerator |
 | `examples/list/grocery/main.go` | `examples/list_grocery/main.rs` | Nested grocery list |
@@ -148,12 +148,12 @@ fixtures:
 | `examples/canvas/main.go` | `examples/canvas/main.rs` | Layer composition via Compositor |
 | `examples/blending/linear-1d/standalone/main.go` | `tests/blending_test.rs` | Blend1D covered by tests |
 | `examples/blending/linear-2d/standalone/main.go` | `examples/blend_2d/main.rs` | Blend2D gradient box |
-| `examples/blending/linear-1d/bubbletea/main.go` | Documented in mapping; Bubble Tea program | Requires `charming-bubbletea` runtime |
-| `examples/blending/linear-2d/bubbletea/main.go` | Documented in mapping; Bubble Tea program | Requires `charming-bubbletea` runtime |
-| `examples/blending/border-blend-rotation/bubbletea/main.go` | Documented in mapping; Bubble Tea program | Requires `charming-bubbletea` runtime |
+| `examples/blending/linear-1d/bubbletea/main.go` | Documented in mapping; Bubble Tea program | Requires `rusty-bubbletea` runtime |
+| `examples/blending/linear-2d/bubbletea/main.go` | Documented in mapping; Bubble Tea program | Requires `rusty-bubbletea` runtime |
+| `examples/blending/border-blend-rotation/bubbletea/main.go` | Documented in mapping; Bubble Tea program | Requires `rusty-bubbletea` runtime |
 | `examples/compat/standalone/main.go` | `src/compat.rs` (unit tests) | Compat colors covered by compat module |
-| `examples/compat/bubbletea/main.go` | Documented in mapping; Bubble Tea program | Requires `charming-bubbletea` runtime |
-| `examples/ssh/main.go` | Documented in mapping; SSH server program | Requires a TUI SSH server runtime (e.g. `charming-wish`), out of scope for this crate |
+| `examples/compat/bubbletea/main.go` | Documented in mapping; Bubble Tea program | Requires `rusty-bubbletea` runtime |
+| `examples/ssh/main.go` | Documented in mapping; SSH server program | Requires a TUI SSH server runtime (e.g. `rusty-wish`), out of scope for this crate |
 
 ## Documentation & Support Files
 
