@@ -6,7 +6,7 @@
 
 # Charming Lip Gloss (`charming-lipgloss`)
 
-**Charming Lip Gloss** is a complete, from-scratch Rust port of [Lip Gloss](https://github.com/charmbracelet/lipgloss), the styling library that powers Charmbracelet's terminal apps. It tracks upstream Go releases on a rolling basis, with crate versions mirroring the upstream Go tags, and a hard goal of **1:1 behavioural, visual and license parity**: the same styles, rendering output, and layout semantics, favoring fidelity to upstream over Rust-native rewrites whenever the two would diverge.
+**Charming Lip Gloss** is a complete, from-scratch Rust port of [Lip Gloss](https://github.com/charmbracelet/lipgloss), the styling library that powers Charmbracelet's terminal apps. It tracks upstream Go releases on a rolling basis. **Version policy: the crate version and every release tag must equal the tracked upstream version exactly — never ahead, never behind** (enforced by `scripts/verify_upstream_version.sh` in CI and on every release). It holds a hard goal of **1:1 behavioural, visual and license parity**: the same styles, rendering output, and layout semantics, favoring fidelity to upstream over Rust-native rewrites whenever the two would diverge.
 
 It's part of the Charming port family of the Bubble Tea ecosystem and builds on [charming-ultraviolet](https://github.com/coderbants/charming-ultraviolet) (terminal renderer & input), [charming-x-ansi](https://github.com/coderbants/charming-x-ansi) (ANSI primitives), and [charming-colorprofile](https://github.com/coderbants/charming-colorprofile) — with UI components available in [charming-bubbles](https://github.com/coderbants/charming-bubbles) and the framework in [charming-bubbletea](https://github.com/coderbants/charming-bubbletea).
 
