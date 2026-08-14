@@ -1,5 +1,6 @@
 [package]
 name = "rusty-lipgloss"
+exclude = ["POLICIES.md"]
 version = "2.0.5"
 edition = "2021"
 description = "Cleanroom Rust port of Charmbracelet's Lip Gloss (v2.0.5) terminal styling library"
