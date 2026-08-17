@@ -1213,6 +1213,9 @@ impl Style {
     /// <upstream-comment>GetPaddingChar returns the style's padding character. If no value is set a
     /// space is returned.</upstream-comment>
     pub fn get_padding_char(&self) -> char {
+        if !self.is_set(PADDING_CHAR_KEY) {
+            return ' ';
+        }
         if self.padding_char == '\0' {
             ' '
         } else {
@@ -1462,11 +1465,15 @@ impl Style {
 
     /// <upstream-comment>GetTabWidth returns the style's tab width setting. If no value is set 4 is
     /// returned which is the implicit default.</upstream-comment>
+    ///
+    /// NOTE: upstream's `getAsInt` returns 0 when unset (the `4` implicit
+    /// default is applied only at render time in `maybeConvertTabs`), so this
+    /// mirrors that: unset returns 0.
     pub fn get_tab_width(&self) -> isize {
         if self.is_set(TAB_WIDTH_KEY) {
             self.tab_width
         } else {
-            4
+            0
         }
     }
 

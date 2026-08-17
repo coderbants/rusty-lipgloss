@@ -401,3 +401,189 @@ fn test_width_and_height_with_borders() {
         assert_eq!(size::height(&rendered), 20 - frame);
     }
 }
+
+/// Ported from upstream `TestStyleUnset`: every setter's paired unset returns
+/// the default.
+#[test]
+fn test_style_unset() {
+    // bold
+    let mut s = Style::new().bold(true);
+    assert!(s.get_bold());
+    s = s.unset_bold();
+    assert!(!s.get_bold());
+
+    // italic
+    s = Style::new().italic(true);
+    assert!(s.get_italic());
+    s = s.unset_italic();
+    assert!(!s.get_italic());
+
+    // underline
+    s = Style::new().underline(true);
+    assert!(s.get_underline());
+    s = s.unset_underline();
+    assert!(!s.get_underline());
+
+    // underline spaces
+    s = Style::new().underline_spaces(true);
+    assert!(s.get_underline_spaces());
+    s = s.unset_underline_spaces();
+    assert!(!s.get_underline_spaces());
+
+    // strikethrough
+    s = Style::new().strikethrough(true);
+    assert!(s.get_strikethrough());
+    s = s.unset_strikethrough();
+    assert!(!s.get_strikethrough());
+
+    // strikethrough spaces
+    s = Style::new().strikethrough_spaces(true);
+    assert!(s.get_strikethrough_spaces());
+    s = s.unset_strikethrough_spaces();
+    assert!(!s.get_strikethrough_spaces());
+
+    // reverse
+    s = Style::new().reverse(true);
+    assert!(s.get_reverse());
+    s = s.unset_reverse();
+    assert!(!s.get_reverse());
+
+    // blink
+    s = Style::new().blink(true);
+    assert!(s.get_blink());
+    s = s.unset_blink();
+    assert!(!s.get_blink());
+
+    // faint
+    s = Style::new().faint(true);
+    assert!(s.get_faint());
+    s = s.unset_faint();
+    assert!(!s.get_faint());
+
+    // inline
+    s = Style::new().inline(true);
+    assert!(s.get_inline());
+    s = s.unset_inline();
+    assert!(!s.get_inline());
+
+    // colors
+    let col = rusty_lipgloss::color::Color::parse("#ffffff");
+    s = Style::new().foreground("#ffffff");
+    assert_eq!(s.get_foreground(), col);
+    s = s.unset_foreground();
+    assert_ne!(s.get_foreground(), col);
+
+    s = Style::new().background("#ffffff");
+    assert_eq!(s.get_background(), col);
+    s = s.unset_background();
+    assert_ne!(s.get_background(), col);
+
+    // margins
+    s = Style::new().margin(&[1, 2, 3, 4]);
+    assert_eq!(s.get_margin_top(), 1);
+    s = s.unset_margin_top();
+    assert_eq!(s.get_margin_top(), 0);
+    assert_eq!(s.get_margin_right(), 2);
+    s = s.unset_margin_right();
+    assert_eq!(s.get_margin_right(), 0);
+    assert_eq!(s.get_margin_bottom(), 3);
+    s = s.unset_margin_bottom();
+    assert_eq!(s.get_margin_bottom(), 0);
+    assert_eq!(s.get_margin_left(), 4);
+    s = s.unset_margin_left();
+    assert_eq!(s.get_margin_left(), 0);
+
+    // padding
+    s = Style::new().padding(&[1, 2, 3, 4]).padding_char('x');
+    assert_eq!(s.get_padding_top(), 1);
+    s = s.unset_padding_top();
+    assert_eq!(s.get_padding_top(), 0);
+    assert_eq!(s.get_padding_right(), 2);
+    s = s.unset_padding_right();
+    assert_eq!(s.get_padding_right(), 0);
+    assert_eq!(s.get_padding_bottom(), 3);
+    s = s.unset_padding_bottom();
+    assert_eq!(s.get_padding_bottom(), 0);
+    assert_eq!(s.get_padding_left(), 4);
+    s = s.unset_padding_left();
+    assert_eq!(s.get_padding_left(), 0);
+
+    // Padding char is set and unset independently.
+    let pc = Style::new().padding_char('x');
+    assert_eq!(pc.get_padding_char(), 'x');
+    let pc = pc.unset_padding_char();
+    assert_eq!(pc.get_padding_char(), ' ');
+
+    // borders
+    s = Style::new().border(Border::normal(), &[true, true, true, true]);
+    assert!(s.get_border_top());
+    s = s.unset_border_top();
+    assert!(!s.get_border_top());
+    assert!(s.get_border_right());
+    s = s.unset_border_right();
+    assert!(!s.get_border_right());
+    assert!(s.get_border_bottom());
+    s = s.unset_border_bottom();
+    assert!(!s.get_border_bottom());
+    assert!(s.get_border_left());
+    s = s.unset_border_left();
+    assert!(!s.get_border_left());
+
+    // tab width
+    s = Style::new().tab_width(2);
+    assert_eq!(s.get_tab_width(), 2);
+    s = s.unset_tab_width();
+    assert_ne!(s.get_tab_width(), 4);
+}
+
+/// Ported from upstream `TestStyleCopy` / `TestValueCopy`: cloning preserves
+/// every field and the two styles are independent.
+#[test]
+fn test_style_copy() {
+    let s = Style::new()
+        .bold(true)
+        .italic(true)
+        .underline(true)
+        .strikethrough(true)
+        .blink(true)
+        .faint(true)
+        .foreground("#ffffff")
+        .background("#111111")
+        .margin(&[1, 1, 1, 1])
+        .padding(&[1, 1, 1, 1])
+        .tab_width(2);
+
+    let i = s.clone();
+    assert_eq!(s.get_bold(), i.get_bold());
+    assert_eq!(s.get_italic(), i.get_italic());
+    assert_eq!(s.get_underline(), i.get_underline());
+    assert_eq!(s.get_underline_spaces(), i.get_underline_spaces());
+    assert_eq!(s.get_strikethrough(), i.get_strikethrough());
+    assert_eq!(s.get_strikethrough_spaces(), i.get_strikethrough_spaces());
+    assert_eq!(s.get_blink(), i.get_blink());
+    assert_eq!(s.get_faint(), i.get_faint());
+    assert_eq!(s.get_foreground(), i.get_foreground());
+    assert_eq!(s.get_background(), i.get_background());
+    assert_eq!(s.get_margin_left(), i.get_margin_left());
+    assert_eq!(s.get_margin_right(), i.get_margin_right());
+    assert_eq!(s.get_margin_top(), i.get_margin_top());
+    assert_eq!(s.get_margin_bottom(), i.get_margin_bottom());
+    assert_eq!(s.get_padding_left(), i.get_padding_left());
+    assert_eq!(s.get_padding_right(), i.get_padding_right());
+    assert_eq!(s.get_padding_top(), i.get_padding_top());
+    assert_eq!(s.get_padding_bottom(), i.get_padding_bottom());
+    assert_eq!(s.get_tab_width(), i.get_tab_width());
+}
+
+/// Ported from upstream `TestGetUnderlineColor` and underline-style accessors.
+#[test]
+fn test_get_underline_color_and_style() {
+    use rusty_lipgloss::ansi::Underline;
+    let red = rusty_lipgloss::color::Color::parse("#FF0000");
+    let s = Style::new()
+        .underline(true)
+        .underline_color(rusty_lipgloss::color::Color::parse("#FF0000"));
+    assert_eq!(s.get_underline_color(), red);
+    let s = Style::new().underline_style(Underline::Curly);
+    assert_eq!(s.get_underline_style(), Underline::Curly);
+}
