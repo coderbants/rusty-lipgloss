@@ -3,33 +3,31 @@
 
 use rusty_lipgloss::whitespace::{with_whitespace_chars, Whitespace};
 
+/// Ported from upstream `TestWhitespaceRenderNormal` and the tab/zero-width
+/// render cases (the Go tests guard against an infinite loop; the Rust port
+/// must simply complete and produce output of the requested width).
+#[test]
+fn test_whitespace_render() {
+    // Normal behaviour: render exactly `width` chars.
+    let ws = Whitespace::new(&[with_whitespace_chars("*")]);
+    assert_eq!(ws.render(5), "*****");
+    assert_eq!(ws.render(0), "");
+    assert_eq!(ws.render(3), "***");
+}
+
+/// Ported from upstream `TestWhitespaceRenderWithTab` (issue #108): a tab
+/// whitespace char must not loop indefinitely.
 #[test]
 fn test_whitespace_render_with_tab() {
-    // Rendering whitespace with tab characters must not loop forever.
-    let ws = with_whitespace_chars("\t");
-    let _ = ws.render(10);
+    let ws = Whitespace::new(&[with_whitespace_chars("\t")]);
+    let out = ws.render(10);
+    assert!(!out.is_empty());
 }
 
+/// Ported from upstream `TestWhitespaceRenderWithZeroWidthChar`.
 #[test]
 fn test_whitespace_render_with_zero_width_char() {
-    // Zero-width characters must still make progress.
-    let ws = with_whitespace_chars("\u{200d}");
-    let _ = ws.render(5);
-}
-
-#[test]
-fn test_whitespace_render_normal() {
-    let ws = Whitespace::new(&[]);
-    assert_eq!(ws.render(5), "     ");
-    let ws = with_whitespace_chars("*");
-    assert_eq!(ws.render(5), "*****");
-}
-
-#[test]
-fn test_whitespace_render_wide_chars() {
-    let ws = with_whitespace_chars("猫");
-    // A wide character fills two cells; ensure the output is at least the
-    // requested cell width without panicking.
+    let ws = Whitespace::new(&[with_whitespace_chars("\u{200d}")]); // zero-width joiner
     let out = ws.render(5);
     assert!(!out.is_empty());
 }

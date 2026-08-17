@@ -132,6 +132,55 @@ impl Style {
         format!("\x1b[{}m", params.join(";"))
     }
 
+    /// Returns the SGR sequence for a whitespace cell, mirroring upstream's
+    /// `teSpace` style: there the underline color is appended before the
+    /// underline flag (so the params read `58;...;4` rather than `4;58;...`).
+    pub fn string_whitespace(&self) -> String {
+        let mut params: Vec<String> = Vec::new();
+        if self.bold {
+            params.push("1".to_string());
+        }
+        if self.faint {
+            params.push("2".to_string());
+        }
+        if self.italic {
+            params.push("3".to_string());
+        }
+        if self.blink {
+            params.push("5".to_string());
+        }
+        if self.reverse {
+            params.push("7".to_string());
+        }
+        if self.strikethrough {
+            params.push("9".to_string());
+        }
+        if let Some(ref c) = self.fg_color {
+            params.push(color_seq(c, 3));
+        }
+        if let Some(ref c) = self.bg_color {
+            params.push(color_seq(c, 4));
+        }
+        if let Some(ref c) = self.ul_color {
+            params.push(color_seq(c, 5));
+        }
+        if self.underline {
+            params.push("4".to_string());
+        }
+        if params.is_empty() {
+            return String::new();
+        }
+        format!("\x1b[{}m", params.join(";"))
+    }
+
+    /// Applies this whitespace style to a string (see [Style::string_whitespace]).
+    pub fn styled_whitespace(&self, s: &str) -> String {
+        if self.is_zero() {
+            return s.to_string();
+        }
+        format!("{}{}{}", self.string_whitespace(), s, RESET_STYLE)
+    }
+
     /// Applies the style to the given string, wrapping it in the SGR sequence
     /// and an ANSI reset.
     pub fn styled(&self, s: &str) -> String {

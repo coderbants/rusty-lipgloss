@@ -444,7 +444,10 @@ impl Style {
                     // Look for spaces and apply a different styler.
                     for r in line.chars() {
                         if r.is_whitespace() {
-                            b.push_str(&te_space.styled(&r.to_string()));
+                            // Upstream renders spaces with a `teSpace` style
+                            // whose params put the underline color before the
+                            // underline flag; mirror that ordering.
+                            b.push_str(&te_space.styled_whitespace(&r.to_string()));
                         } else {
                             b.push_str(&te.styled(&r.to_string()));
                         }
