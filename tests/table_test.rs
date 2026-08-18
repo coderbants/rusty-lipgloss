@@ -278,3 +278,76 @@ fn test_table_with_custom_data() {
     assert!(out.contains("Chinese"));
     assert!(out.contains("French"));
 }
+
+/// Ported from upstream `TestTableRowSeparators`: row separators draw lines
+/// between data rows.
+#[test]
+fn test_table_row_separators() {
+    let mut t = Table::new()
+        .border(Border::normal())
+        .border_row(true)
+        .headers(&["LANGUAGE", "FORMAL", "INFORMAL"])
+        .row(&["Chinese", "Nǐn hǎo", "Nǐ hǎo"])
+        .row(&["French", "Bonjour", "Salut"])
+        .row(&["Japanese", "こんにちは", "やあ"])
+        .row(&["Russian", "Zdravstvuyte", "Privet"])
+        .row(&["Spanish", "Hola", "¿Qué tal?"]);
+    let out = t.render();
+    // Multiple separator rows present.
+    let sep_count = out.lines().filter(|l| l.starts_with('├')).count();
+    assert!(sep_count >= 2, "got {sep_count} separators: {out:?}");
+}
+
+/// Ported from upstream `TestTableNoColumnSeparators`: no column separators.
+#[test]
+fn test_table_no_column_separators_mid() {
+    let mut t = Table::new()
+        .border(Border::normal())
+        .border_column(false)
+        .border_row(true)
+        .headers(&["LANGUAGE", "FORMAL", "INFORMAL"])
+        .row(&["Chinese", "Nǐn hǎo", "Nǐ hǎo"])
+        .row(&["French", "Bonjour", "Salut"]);
+    let out = t.render();
+    let sep = out.lines().find(|l| l.starts_with('├')).unwrap();
+    // No interior '┼' separators when column separators are off.
+    assert!(!sep.contains('┼'), "got: {sep:?}");
+}
+
+/// Ported from upstream border side toggles: outline-only borders.
+#[test]
+fn test_table_outline_only_borders() {
+    let mut t = Table::new()
+        .border(Border::normal())
+        .border_top(true)
+        .border_bottom(true)
+        .border_left(true)
+        .border_right(true)
+        .border_column(false)
+        .border_row(false)
+        .border_header(true)
+        .headers(&["LANGUAGE", "FORMAL"])
+        .row(&["Chinese", "Nǐn hǎo"]);
+    let out = t.render();
+    assert!(out.starts_with('┌'));
+    assert!(out.ends_with('┘'));
+}
+
+/// Ported from upstream `TestInnerBordersOnly`: only inner borders.
+#[test]
+fn test_table_inner_borders_only() {
+    let mut t = Table::new()
+        .border(Border::normal())
+        .border_top(false)
+        .border_bottom(false)
+        .border_left(false)
+        .border_right(false)
+        .border_column(true)
+        .border_row(true)
+        .border_header(true)
+        .headers(&["LANGUAGE", "FORMAL"])
+        .row(&["Chinese", "Nǐn hǎo"]);
+    let out = t.render();
+    assert!(!out.starts_with('┌'));
+    assert!(out.contains('│'));
+}
