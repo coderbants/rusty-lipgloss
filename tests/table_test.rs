@@ -162,3 +162,61 @@ fn test_table_widths() {
     let out = t.render();
     assert_eq!(rusty_lipgloss::size::width(&out), 30);
 }
+
+/// Ported from upstream `TestTableWidthShrink`: narrow widths force shrinking.
+#[test]
+fn test_table_width_shrink() {
+    let mut t = Table::new()
+        .width(20)
+        .border(Border::normal())
+        .headers(&["LANGUAGE", "FORMAL", "INFORMAL"])
+        .row(&["Chinese", "Nǐn hǎo", "Nǐ hǎo"])
+        .row(&["French", "Bonjour", "Salut"])
+        .row(&["Japanese", "こんにちは", "やあ"])
+        .row(&["Russian", "Zdravstvuyte", "Privet"])
+        .row(&["Spanish", "Hola", "¿Qué tal?"]);
+    let out = t.render();
+    assert!(rusty_lipgloss::size::width(&out) <= 20);
+    assert!(out.contains("Chine") || out.contains("LANG…"));
+}
+
+/// Ported from upstream `TestTableWidthExpand`: wide width expands columns.
+#[test]
+fn test_table_width_expand() {
+    let mut t = Table::new()
+        .width(80)
+        .headers(&["A", "B"])
+        .row(&["1", "2"])
+        .row(&["3", "4"]);
+    let out = t.render();
+    assert_eq!(rusty_lipgloss::size::width(&out), 80);
+}
+
+/// Ported from upstream `TestTableHeight*`: height limits visible rows.
+#[test]
+fn test_table_height_limits_rows() {
+    let mut t = Table::new()
+        .height(2)
+        .headers(&["A", "B"])
+        .row(&["1", "2"])
+        .row(&["3", "4"])
+        .row(&["5", "6"]);
+    let out = t.render();
+    let line_count = out.lines().count();
+    assert!(line_count <= 4, "got {line_count} lines: {out:?}");
+}
+
+/// Ported from upstream `TestTableHeightExact`/`TestTableHeightExtra`.
+#[test]
+fn test_table_height_shrink_with_y_offset() {
+    let mut t = Table::new()
+        .height(2)
+        .y_offset(1)
+        .headers(&["A", "B"])
+        .row(&["1", "2"])
+        .row(&["3", "4"])
+        .row(&["5", "6"]);
+    let out = t.render();
+    let line_count = out.lines().count();
+    assert!(line_count <= 4);
+}
