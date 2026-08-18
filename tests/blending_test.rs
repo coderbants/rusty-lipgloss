@@ -75,3 +75,33 @@ fn test_blend_2d_empty_stops() {
     let got = blend_2d(2, 2, 0.0, &[]);
     assert_eq!(got.len(), 0);
 }
+
+/// Ported from upstream `blend` pair behavior: blending with non-TrueColor
+/// colors falls back to the source color.
+#[test]
+fn test_blend_1d_pair_fallbacks() {
+    use rusty_lipgloss::blending::blend_1d_pair;
+    // TrueColor pair blends.
+    let c = blend_1d_pair(&rgba(255, 0, 0), &rgba(0, 0, 255), 0.5);
+    assert!(matches!(c, Color::TrueColor { .. }));
+    // NoColor start falls back to the start color.
+    let c = blend_1d_pair(&Color::NoColor, &rgba(0, 0, 255), 0.5);
+    assert_eq!(c, Color::NoColor);
+    // Ansi16 start falls back to the start color.
+    let c = blend_1d_pair(&Color::Ansi16(1), &rgba(0, 0, 255), 0.5);
+    assert_eq!(c, Color::Ansi16(1));
+    // Factor clamping.
+    let c = blend_1d_pair(&rgba(0, 0, 0), &rgba(255, 255, 255), 1.5);
+    assert!(matches!(c, Color::TrueColor { .. }));
+    let c = blend_1d_pair(&rgba(0, 0, 0), &rgba(255, 255, 255), -0.5);
+    assert!(matches!(c, Color::TrueColor { .. }));
+}
+
+/// Ported from upstream `blend` NoColor filtering: NoColor stops are dropped.
+#[test]
+fn test_blend_1d_nocolor_stops() {
+    let got = blend_1d(4, &[Color::NoColor, rgba(255, 0, 0), rgba(0, 0, 255)]);
+    assert_eq!(got.len(), 4);
+    let got = blend_1d(4, &[Color::NoColor]);
+    assert_eq!(got.len(), 0);
+}
