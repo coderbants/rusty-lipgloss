@@ -32,3 +32,100 @@ fn test_wrap_short_width() {
     let out = wrap(s, 3, "");
     assert_eq!(out, "aaa\nbbb\nccc");
 }
+
+/// Ported from upstream `ansi.Wrap` behaviors: hardwrapping long words.
+#[test]
+fn test_wrap_hardwrap_long_word() {
+    let s = "abcdefghijklmno";
+    let out = wrap(s, 5, "");
+    assert_eq!(out, "abcde\nfghij\nklmno");
+}
+
+/// Ported from upstream `ansi.Wrap` behaviors: newlines inside input.
+#[test]
+fn test_wrap_preserves_newlines() {
+    let s = "abc def\nghi jkl";
+    let out = wrap(s, 10, "");
+    assert!(out.contains("abc def\nghi jkl"));
+}
+
+/// Ported from upstream `ansi.Wrap` behaviors: breakpoints.
+#[test]
+fn test_wrap_breakpoints() {
+    let s = "a/b/c/d";
+    let out = wrap(s, 3, "/");
+    // The breakpoint folds into the word when the line is full.
+    assert_eq!(out, "a/\nb/c\n/d");
+}
+
+/// Ported from upstream `ansi.Wrap` behaviors: hyphen breakpoints.
+#[test]
+fn test_wrap_hyphen() {
+    let s = "foo-bar-baz";
+    let out = wrap(s, 4, "");
+    assert_eq!(out, "foo-\nbar-\nbaz");
+}
+
+/// Ported from upstream `ansi.Wrap` behaviors: OSC sequences pass through.
+#[test]
+fn test_wrap_osc_sequences() {
+    let s = "\x1b]8;;https://example.com\x07link\x1b]8;;\x07";
+    let out = wrap(s, 100, "");
+    assert!(out.contains("\x1b]8;;https://example.com\x07"));
+}
+
+/// Ported from upstream `ansi.Wrap` behaviors: trailing spaces are dropped.
+#[test]
+fn test_wrap_trailing_space() {
+    let s = "hello  world  ";
+    let out = wrap(s, 20, "");
+    // Whitespace is preserved (upstream ansi.Wrap semantics).
+    assert_eq!(out, "hello  world  ");
+}
+
+/// Ported from upstream `ansi.Wrap` behaviors: zero width with newlines.
+#[test]
+fn test_wrap_zero_width_ignores() {
+    let s = "hello\nworld";
+    assert_eq!(wrap(s, 0, ""), "hello\nworld");
+}
+
+/// Ported from upstream `ansi.Wrap` behaviors: ANSI-tagged words count width
+/// without the escape bytes.
+#[test]
+fn test_wrap_ansi_width() {
+    let s = "\x1b[31mabcdef\x1b[m";
+    let out = wrap(s, 3, "");
+    // Escape codes stay attached to their word (upstream ansi.Wrap).
+    assert_eq!(out, "\x1b[31mabc\ndef\x1b[m");
+}
+
+/// Ported from upstream `TestWrapWriterWriteAfterClose`: writing after close
+/// succeeds (the buffer still accepts writes).
+#[test]
+fn test_wrap_writer_write_after_close() {
+    use rusty_lipgloss::ansi::WrapWriter;
+    let mut buf: Vec<u8> = Vec::new();
+    {
+        let mut w = WrapWriter::new(&mut buf);
+        w.close().expect("close");
+        let n = w.write(b"after close").expect("write after close");
+        assert_eq!(n, b"after close".len());
+    }
+    assert_eq!(buf, b"after close");
+}
+
+/// WrapWriter writes bytes through and reports its default style/link.
+#[test]
+fn test_wrap_writer_defaults() {
+    use rusty_lipgloss::ansi::WrapWriter;
+    let mut buf: Vec<u8> = Vec::new();
+    {
+        let mut w = WrapWriter::new(&mut buf);
+        assert!(w.style().is_zero());
+        assert_eq!(w.link(), "");
+        w.write(b"hello\nworld").expect("write");
+        w.close().expect("close");
+    }
+    assert_eq!(buf, b"hello\nworld");
+}
