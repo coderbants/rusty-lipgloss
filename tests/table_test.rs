@@ -220,3 +220,61 @@ fn test_table_height_shrink_with_y_offset() {
     let line_count = out.lines().count();
     assert!(line_count <= 4);
 }
+
+/// Ported from upstream `TestStringData`/`TestFilter`/`DataToMatrix`:
+/// the Data trait, StringData, Filter, and data_to_matrix helpers.
+#[test]
+fn test_table_data_helpers() {
+    use rusty_lipgloss::table::rows::{data_to_matrix, new_filter, StringData};
+    use rusty_lipgloss::table::Data;
+    let mut sd = StringData::new(&[&["A", "B"], &["C", "D"]]);
+    sd.item(&["E", "F"]);
+    sd.append(&["G", "H"]);
+    assert_eq!(sd.at(0, 0), "A");
+    assert_eq!(sd.at(2, 1), "F");
+    assert_eq!(sd.at(99, 99), "");
+    assert_eq!(sd.rows(), 4);
+    assert_eq!(sd.columns(), 2);
+
+    // data_to_matrix flattens.
+    let m = data_to_matrix(&sd);
+    assert_eq!(m.len(), 4);
+    assert_eq!(m[3][0], "G");
+
+    // Filter removes rows by predicate.
+    let data: Box<dyn Data> = Box::new(sd);
+    let f = new_filter(data).filter(Box::new(|i| i != 1));
+    assert_eq!(f.at(0, 0), "A");
+    assert_eq!(f.at(1, 0), "E");
+    assert_eq!(f.rows(), 3);
+    assert_eq!(f.columns(), 2);
+    let m = data_to_matrix(&f);
+    assert_eq!(m.len(), 3);
+
+    // A filter with no predicate passes all rows.
+    let data: Box<dyn Data> = Box::new(StringData::new(&[&["X"]]));
+    let f = new_filter(data);
+    assert_eq!(f.rows(), 1);
+    assert_eq!(f.at(0, 0), "X");
+}
+
+/// Ported from upstream `TestTableSetRows`/data: a table fed by a custom Data
+/// backend renders.
+#[test]
+fn test_table_with_custom_data() {
+    use rusty_lipgloss::table::rows::{new_filter, StringData};
+    use rusty_lipgloss::table::{Data, Table};
+    let sd = StringData::new(&[
+        &["LANGUAGE", "FORMAL"],
+        &["Chinese", "Nǐn hǎo"],
+        &["French", "Bonjour"],
+    ]);
+    let data: Box<dyn Data> = Box::new(sd);
+    let filtered = new_filter(data).filter(Box::new(|i| i != 0));
+    let mut t = Table::new()
+        .border(Border::normal())
+        .data(Box::new(filtered));
+    let out = t.render();
+    assert!(out.contains("Chinese"));
+    assert!(out.contains("French"));
+}

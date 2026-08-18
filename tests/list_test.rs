@@ -137,3 +137,63 @@ fn test_list_all_enumerators() {
     let roman_out = build(roman);
     assert!(roman_out.contains("  I. Foo"));
 }
+
+/// Ported from upstream list API: every builder method applies and renders.
+#[test]
+fn test_list_all_builders() {
+    use rusty_lipgloss::list::List;
+    use rusty_lipgloss::Style;
+    use std::sync::Arc;
+    let l = List::new()
+        .hide(false)
+        .offset(0, 100)
+        .enumerator_style(Style::new().foreground("#ff0000"))
+        .enumerator_style_func(Arc::new(
+            |_s: &dyn rusty_lipgloss::tree::Children, _i: usize| Style::new().foreground("#ffffff"),
+        ))
+        .indenter_style(Style::new())
+        .indenter_style_func(Arc::new(
+            |_s: &dyn rusty_lipgloss::tree::Children, _i: usize| Style::new(),
+        ))
+        .indenter(Arc::new(
+            |_s: &dyn rusty_lipgloss::tree::Children, _d: usize| "  ".to_string(),
+        ))
+        .item_style(Style::new().bold(true))
+        .item_style_func(Arc::new(
+            |_s: &dyn rusty_lipgloss::tree::Children, _i: usize| Style::new(),
+        ))
+        .item("Foo")
+        .item("Bar");
+    let out = l.render();
+    assert!(out.contains("Foo"));
+    assert!(out.contains("Bar"));
+}
+
+/// Ported from upstream list API: hide(true) hides the whole list.
+#[test]
+fn test_list_hidden() {
+    use rusty_lipgloss::list::List;
+    let l = List::new().hide(true).item("Foo");
+    assert_eq!(l.render(), "");
+    assert!(l.hidden());
+}
+
+/// Ported from upstream list API: nested sub-lists render.
+#[test]
+fn test_list_child_list() {
+    use rusty_lipgloss::list::List;
+    let sub = List::new().item("Sub1").item("Sub2");
+    let l = List::new().item("Top").child_list(sub);
+    let out = l.render();
+    assert!(out.contains("Top"));
+    assert!(out.contains("Sub1"));
+    assert!(out.contains("Sub2"));
+}
+
+/// Ported from upstream list API: Display impl renders.
+#[test]
+fn test_list_display() {
+    use rusty_lipgloss::list::List;
+    let l = List::new().item("A").item("B");
+    assert_eq!(format!("{l}"), l.render());
+}
