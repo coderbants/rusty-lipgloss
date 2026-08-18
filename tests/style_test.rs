@@ -960,3 +960,74 @@ fn test_render_max_width() {
     let out = Style::new().max_width(3).render("abcdef");
     assert_eq!(out, "abc");
 }
+
+/// Ported from upstream render internals: borders with specific sides enabled
+/// exercise the partial-border corner logic.
+#[test]
+fn test_render_partial_borders() {
+    use rusty_lipgloss::border::Border;
+    // Only top and bottom (no left/right).
+    let out = Style::new()
+        .border(Border::normal(), &[true, false, true, false])
+        .render("hi");
+    assert!(out.starts_with("─"));
+    assert!(out.contains("─"));
+    // Only left and right.
+    let out = Style::new()
+        .border(Border::normal(), &[false, true, false, true])
+        .render("hi");
+    assert!(out.contains('│'));
+    // Only top.
+    let out = Style::new()
+        .border(Border::normal(), &[true, false, false, false])
+        .render("hi");
+    assert!(out.starts_with("─"));
+    // Empty-side border (all sides off) aborts to plain text.
+    let out = Style::new()
+        .border(Border::normal(), &[false, false, false, false])
+        .render("hi");
+    assert_eq!(out, "hi");
+    // Custom border with empty chars.
+    let empty = Border {
+        top: "".into(),
+        right: "".into(),
+        bottom: "".into(),
+        left: "".into(),
+        top_left: "".into(),
+        top_right: "".into(),
+        bottom_left: "".into(),
+        bottom_right: "".into(),
+        ..Border::default()
+    };
+    let out = Style::new()
+        .border(empty, &[true, true, true, true])
+        .render("hi");
+    assert_eq!(out, "hi");
+}
+
+/// Ported from upstream render internals: margins render blank lines/columns
+/// around the styled output.
+#[test]
+fn test_render_margins() {
+    let out = Style::new()
+        .margin(&[1, 2, 1, 2])
+        .background("#ff0000")
+        .render("hi");
+    // The margin creates a surrounding blank area.
+    let lines: Vec<&str> = out.lines().collect();
+    assert!(lines.len() >= 3);
+    assert!(out.contains("\x1b[48;2;255;0;0m"));
+}
+
+/// Ported from upstream render internals: get_frame_size sums margins/padding/
+/// borders.
+#[test]
+fn test_get_frame_size() {
+    let s = Style::new()
+        .margin(&[1, 2, 3, 4])
+        .padding(&[1, 2, 3, 4])
+        .border(Border::normal(), &[true, true, true, true]);
+    let (x, y) = s.get_frame_size();
+    assert_eq!(x, 6 + 6 + 2); // margin(4+2) + padding(4+2) + border(1+1)
+    assert_eq!(y, 4 + 4 + 2); // margin(1+3) + padding(1+3) + border(1+1)
+}
