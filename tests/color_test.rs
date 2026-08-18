@@ -362,3 +362,11 @@ fn test_complementary_hue_wrap() {
     let c = complementary(Color::parse("#800000"));
     assert!(matches!(c, Color::TrueColor { .. }));
 }
+
+/// Ported from upstream parse_hex error path.
+#[test]
+fn test_parse_hex_error() {
+    use rusty_lipgloss::color::parse_hex;
+    assert!(parse_hex("").is_err());
+    assert!(parse_hex("nope").is_err());
+}

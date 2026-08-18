@@ -92,3 +92,27 @@ fn test_position_display_and_vertical_align_branches() {
     let out = place_vertical(2, Position::default(), "hi", &[]);
     assert_eq!(out, "hi\n  ");
 }
+
+/// Covers the trivial accessors and helpers.
+#[test]
+fn test_misc_accessors() {
+    // size function.
+    assert_eq!(rusty_lipgloss::size::size("hi\nho"), (2, 2));
+    assert_eq!(rusty_lipgloss::size::size("hello"), (5, 1));
+    // new_style alias.
+    let s = rusty_lipgloss::new_style();
+    assert_eq!(s.render("x"), "x");
+    // table::new alias.
+    let t = rusty_lipgloss::table::new();
+    assert!(t.get_border_top());
+    // tree::new / tree::root aliases.
+    let t = rusty_lipgloss::tree::new();
+    assert_eq!(t.render(), "");
+    let t = rusty_lipgloss::tree::root("root");
+    assert_eq!(t.render(), "root");
+    // space helper.
+    assert_eq!(rusty_lipgloss::whitespace::space(3), "   ");
+    // Place horizontal with a multiline string hits the newline branch.
+    let out = rusty_lipgloss::position::place_horizontal(5, rusty_lipgloss::LEFT, "a\nb", &[]);
+    assert!(out.contains("\n"));
+}
