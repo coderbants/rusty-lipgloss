@@ -291,3 +291,35 @@ fn test_convert_256_grayscale() {
     use rusty_lipgloss::writer::convert_256;
     assert_eq!(convert_256(128, 128, 128), 244);
 }
+
+/// Ported from upstream readStyleColor error paths and color_seq branches.
+#[test]
+fn test_writer_read_style_color_errors() {
+    // 38 with no params -> default fg 39.
+    let out = downsample_sgr("\x1b[38mhi\x1b[m", Profile::Ansi256);
+    assert!(out.contains("39"), "got: {out:?}");
+    // 38;2 with fewer than 5 params -> default fg.
+    let out = downsample_sgr("\x1b[38;2;1;2mhi\x1b[m", Profile::Ansi256);
+    assert!(out.contains("39"), "got: {out:?}");
+    // 38;5 with an out-of-range index -> default fg.
+    let out = downsample_sgr("\x1b[38;5;999mhi\x1b[m", Profile::Ansi256);
+    assert!(out.contains("39"), "got: {out:?}");
+    // 38;9 unknown color type -> default fg.
+    let out = downsample_sgr("\x1b[38;9mhi\x1b[m", Profile::Ansi256);
+    assert!(out.contains("39"), "got: {out:?}");
+}
+
+/// Ported from upstream: Writer profile accessor.
+#[test]
+fn test_writer_profile_accessor() {
+    use rusty_lipgloss::writer::Writer;
+    let mut buf: Vec<u8> = Vec::new();
+    {
+        let mut w = Writer::new(Box::new(&mut buf));
+        // In CI the profile is NoTty; just assert it's a valid Profile.
+        let _ = w.profile();
+        // write on a NoTty profile strips ANSI.
+        w.write(b"\x1b[31mhi\x1b[m").expect("write");
+    }
+    assert_eq!(buf, b"hi");
+}
