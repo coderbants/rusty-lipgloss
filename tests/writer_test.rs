@@ -123,3 +123,64 @@ fn test_convert_256() {
     assert_eq!(convert_256(0, 255, 0), 46);
     assert_eq!(convert_256(0, 0, 255), 21);
 }
+
+/// Ported from upstream `handleSgr` error paths: malformed 38/48/58 color
+/// sequences fall back to the default SGR code.
+#[test]
+fn test_writer_malformed_colors() {
+    // 38 without enough params.
+    let out = downsample_sgr("\x1b[38;2;255;0mhi\x1b[m", Profile::Ansi256);
+    assert!(out.contains("39"), "got: {out:?}");
+    // 48;2 with a missing channel (only 4 params).
+    let out = downsample_sgr("\x1b[48;2;255;0mhi\x1b[m", Profile::Ansi256);
+    assert!(out.contains("49"), "got: {out:?}");
+    // 58 with fewer than 3 params.
+    let out = downsample_sgr("\x1b[58;5mhi\x1b[m", Profile::Ansi256);
+    assert!(out.contains("59"), "got: {out:?}");
+    // 38;2;0;0;0 (valid truecolor) downsamples to 256.
+    let out = downsample_sgr("\x1b[38;2;0;0;0mhi\x1b[m", Profile::Ansi256);
+    assert!(out.contains("38;5;16"), "got: {out:?}");
+    // 38;5;7 (basic ANSI via 256) downsamples to ANSI.
+    let out = downsample_sgr("\x1b[38;5;7mhi\x1b[m", Profile::Ansi);
+    assert!(out.contains("37"), "got: {out:?}");
+}
+
+/// Ported from upstream `downsampleSgr`: non-SGR escape sequences pass through.
+#[test]
+fn test_writer_non_sgr_escapes() {
+    // With an ANSI profile, non-SGR sequences (CSI without a final byte of
+    // 'm' and OSC) are passed through verbatim.
+    let out = downsample_sgr("\x1b[2Jclear\x1b]0;title\x07done", Profile::Ansi);
+    assert!(out.contains("\x1b[2J"), "got: {out:?}");
+    assert!(out.contains("\x1b]0;title\x07"), "got: {out:?}");
+    assert!(out.contains("done"), "got: {out:?}");
+    // With NoTty all ANSI sequences are stripped.
+    let out = downsample_sgr("\x1b[2Jclear", Profile::NoTty);
+    assert_eq!(out, "clear");
+}
+
+/// Ported from upstream profile detection via NO_COLOR/CLICOLOR env in a
+/// non-TTY child process.
+#[test]
+fn test_writer_detect_profile_no_color() {
+    use std::process::Command;
+    let out = Command::new(std::env::current_exe().unwrap())
+        .env("NO_COLOR", "1")
+        .env("RUST_LIPGLOSS_WRITER_PROBE", "1")
+        .args(["--exact", "probe_writer_detect_profile", "--nocapture"])
+        .output()
+        .expect("spawn");
+    assert!(out.status.success());
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains("PROFILE="), "got: {stdout}");
+}
+
+/// Probe helper for env-based profile detection.
+#[test]
+fn probe_writer_detect_profile() {
+    if std::env::var("RUST_LIPGLOSS_WRITER_PROBE").is_err() {
+        return;
+    }
+    let p = rusty_lipgloss::writer::detect_profile();
+    println!("PROFILE={p:?}");
+}

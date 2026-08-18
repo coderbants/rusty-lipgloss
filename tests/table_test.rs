@@ -405,3 +405,48 @@ fn test_table_more_cells_than_headers() {
     assert!(out.contains("1"));
     assert!(out.contains("3"));
 }
+
+/// Ported from upstream `TestTableHeightExact`/`TestTableHeightExtra`:
+/// a small height on many rows forces the visible-row-index calculation.
+#[test]
+fn test_table_scrolling_visible_rows() {
+    let mut t = Table::new()
+        .height(3)
+        .headers(&["A", "B"])
+        .row(&["1", "2"])
+        .row(&["3", "4"])
+        .row(&["5", "6"])
+        .row(&["7", "8"])
+        .row(&["9", "0"]);
+    let out = t.render();
+    let lines = out.lines().count();
+    assert!(lines <= 7, "got {lines} lines: {out:?}");
+    let _ = t.first_visible_row_index();
+    let _ = t.last_visible_row_index();
+    let _ = t.visible_rows();
+}
+
+/// Ported from upstream `TestTableHeightWithYOffset`: offset + small height.
+#[test]
+fn test_table_scrolling_y_offset() {
+    let mut t = Table::new()
+        .height(3)
+        .y_offset(2)
+        .headers(&["A", "B"])
+        .row(&["1", "2"])
+        .row(&["3", "4"])
+        .row(&["5", "6"])
+        .row(&["7", "8"])
+        .row(&["9", "0"]);
+    let out = t.render();
+    let lines = out.lines().count();
+    assert!(lines <= 7, "got {lines} lines: {out:?}");
+}
+
+/// Ported from upstream `TestTableHeightShrink`: height smaller than a row.
+#[test]
+fn test_table_height_shrink_single_row() {
+    let mut t = Table::new().height(1).headers(&["A", "B"]).row(&["1", "2"]);
+    let out = t.render();
+    assert!(!out.is_empty());
+}
