@@ -1169,3 +1169,30 @@ fn test_render_border_corner_combos() {
         .render("hi");
     assert!(out.lines().last().unwrap().ends_with("┘"));
 }
+
+/// Ported from upstream render internals: border_style without explicit sides
+/// renders borders on all sides (is_border_style_set_without_sides).
+#[test]
+fn test_render_border_style_all_sides() {
+    use rusty_lipgloss::border::Border;
+    let out = Style::new().border_style(Border::normal()).render("hi");
+    assert!(out.starts_with("┌"));
+    assert!(out.contains("│"));
+    assert!(out.ends_with("┘"));
+    // A custom border with empty edges but set corners is non-default and
+    // renders; empty edges are filled with spaces.
+    let sparse = Border {
+        top: "".into(),
+        right: "".into(),
+        bottom: "".into(),
+        left: "".into(),
+        top_left: "┌".into(),
+        top_right: "┐".into(),
+        bottom_left: "└".into(),
+        bottom_right: "┘".into(),
+        ..Border::default()
+    };
+    let out = Style::new().border_style(sparse).render("hi");
+    assert!(out.starts_with("┌"));
+    assert!(out.contains(' '));
+}
