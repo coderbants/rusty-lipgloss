@@ -58,8 +58,8 @@ fn test_tree_string_leaves() {
 /// Ported from upstream `TestAt`: out-of-range indices return `None`.
 #[test]
 fn test_tree_children_at() {
-    use rusty_lipgloss::tree::{new_string_data, Children};
-    let data = new_string_data(&["Foo", "Bar"]);
+    use rusty_lipgloss::tree::Children;
+    let data: Vec<rusty_lipgloss::tree::Node> = vec![rusty_lipgloss::tree::Node::leaf("Foo".to_string()), rusty_lipgloss::tree::Node::leaf("Bar".to_string())];
     assert_eq!(
         <Vec<Node> as Children>::at(&data, 0).map(|n| n.value()),
         Some("Foo")
@@ -82,7 +82,7 @@ fn test_tree_filter() {
 /// the item value.
 #[test]
 fn test_tree_custom_enumerator_inspects_value() {
-    use rusty_lipgloss::tree::{new_string_data, Children};
+    use rusty_lipgloss::tree::Children;
     use std::sync::Arc;
 
     let data: Vec<Child> = vec!["Foo".into(), "Bar".into()];
