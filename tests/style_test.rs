@@ -636,7 +636,10 @@ fn test_inherit_every_attribute() {
         .align(&[rusty_lipgloss::CENTER, rusty_lipgloss::TOP])
         .padding_char('.')
         .margin_char('*')
-        .border(rusty_lipgloss::border::Border::normal(), &[true, true, true, true])
+        .border(
+            rusty_lipgloss::border::Border::normal(),
+            &[true, true, true, true],
+        )
         .border_foreground(&["#ff0000"])
         .border_background(&["#00ff00"])
         .border_foreground_blend(&["#111111", "#ffffff"])
@@ -658,4 +661,70 @@ fn test_inherit_every_attribute() {
     assert_eq!(i.get_align_vertical(), rusty_lipgloss::TOP);
     assert_eq!(i.get_padding_char(), '.');
     assert_eq!(i.get_margin_char(), '*');
+}
+
+/// Ported from upstream `TestStyleUnset` extended: every non-boolean property
+/// can be unset back to its default.
+#[test]
+fn test_unset_all_properties() {
+    use rusty_lipgloss::border::Border;
+    use rusty_lipgloss::color::Color;
+    let s = Style::new()
+        .width(30)
+        .height(2)
+        .align(&[rusty_lipgloss::CENTER, rusty_lipgloss::TOP])
+        .padding(&[1, 1, 1, 1])
+        .padding_char('.')
+        .margin(&[2, 2, 2, 2])
+        .margin_char('*')
+        .margin_background("#000000")
+        .border(Border::normal(), &[true, true, true, true])
+        .border_style(Border::rounded())
+        .border_foreground(&["#ffffff"])
+        .border_background(&["#000000"])
+        .border_foreground_blend(&["#000000", "#ffffff"])
+        .border_foreground_blend_offset(2)
+        .max_width(40)
+        .max_height(5)
+        .transform(|s| s.to_string());
+    // Unset everything numeric/color/border.
+    let u = s
+        .unset_width()
+        .unset_height()
+        .unset_align()
+        .unset_align_horizontal()
+        .unset_align_vertical()
+        .unset_padding()
+        .unset_padding_char()
+        .unset_padding_left()
+        .unset_padding_right()
+        .unset_padding_top()
+        .unset_padding_bottom()
+        .unset_color_whitespace()
+        .unset_margins()
+        .unset_margin_background()
+        .unset_border_style()
+        .unset_border_top_foreground()
+        .unset_border_right_foreground()
+        .unset_border_bottom_foreground()
+        .unset_border_left_foreground()
+        .unset_border_foreground_blend()
+        .unset_border_foreground_blend_offset()
+        .unset_border_top_background()
+        .unset_border_right_background()
+        .unset_border_bottom_background()
+        .unset_border_left_background()
+        .unset_max_width()
+        .unset_max_height()
+        .unset_transform()
+        .unset_string();
+    assert_eq!(u.get_width(), 0);
+    assert_eq!(u.get_height(), 0);
+    assert_eq!(u.get_padding(), (0, 0, 0, 0));
+    assert_eq!(u.get_margin(), (0, 0, 0, 0));
+    assert_eq!(u.get_max_width(), 0);
+    assert_eq!(u.get_max_height(), 0);
+    assert!(u.get_transform().is_none());
+    assert_eq!(u.value(), "");
+    let _ = Color::default();
 }

@@ -1513,6 +1513,9 @@ impl Style {
     /// <upstream-comment>GetTransform returns the transform set on the style. If no transform is set
     /// nil is returned.</upstream-comment>
     pub fn get_transform(&self) -> Option<Transform> {
+        if !self.is_set(TRANSFORM_KEY) {
+            return None;
+        }
         self.transform
     }
 
