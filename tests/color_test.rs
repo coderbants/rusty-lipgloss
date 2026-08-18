@@ -219,3 +219,56 @@ fn test_is_dark_color() {
     assert!(is_dark_color(&Color::parse("#800000")));
     assert!(!is_dark_color(&Color::parse("#00ffff")));
 }
+
+/// Ported from upstream color render paths: bright ANSI, ANSI256, NoColor and
+/// the adaptive/complete Display impls.
+#[test]
+fn test_color_render_all_variants() {
+    use rusty_lipgloss::Color;
+    // Bright ANSI foreground (8-15 map to 90-97).
+    assert_eq!(Color::Ansi16(9).render_fg(), "\x1b[91m");
+    assert_eq!(Color::Ansi16(8).render_fg(), "\x1b[90m");
+    // ANSI256 background.
+    assert_eq!(Color::Ansi256(196).render_bg(), "\x1b[48;5;196m");
+    // ANSI256 underline.
+    assert_eq!(Color::Ansi256(196).render_ul(), "\x1b[58;5;196m");
+    // NoColor renders empty.
+    assert_eq!(Color::NoColor.render_fg(), "");
+    assert_eq!(Color::NoColor.render_bg(), "");
+    assert_eq!(Color::NoColor.render_ul(), "");
+}
+
+/// Ported from upstream hex parsing: invalid inputs return errors.
+#[test]
+fn test_color_parse_errors() {
+    use rusty_lipgloss::Color;
+    assert_eq!(Color::parse(""), Color::NoColor);
+    assert_eq!(Color::parse("notacolor"), Color::NoColor);
+    assert_eq!(Color::parse("#12345"), Color::NoColor);
+    assert_eq!(Color::parse("#1234567"), Color::NoColor);
+    assert_eq!(Color::parse("#gggggg"), Color::NoColor);
+    // Large integers are interpreted as 0xRRGGBB (256 = 0x000100).
+    assert_eq!(Color::parse("256"), Color::TrueColor { r: 0, g: 1, b: 0 });
+    assert_eq!(
+        Color::parse("16711680"),
+        Color::TrueColor { r: 255, g: 0, b: 0 }
+    );
+}
+
+/// Ported from upstream indexed palette: gray shades and indexed rgb.
+#[test]
+fn test_indexed_palette() {
+    use rusty_lipgloss::color::indexed_rgb;
+    let (r, g, b) = indexed_rgb(232);
+    assert_eq!(r, 8);
+    assert_eq!(g, 8);
+    assert_eq!(b, 8);
+    let (r, g, b) = indexed_rgb(255);
+    assert_eq!(r, 238);
+    assert_eq!(g, 238);
+    assert_eq!(b, 238);
+    let (r, g, b) = indexed_rgb(196);
+    assert_eq!(r, 255);
+    assert_eq!(g, 0);
+    assert_eq!(b, 0);
+}

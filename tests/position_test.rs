@@ -54,3 +54,23 @@ fn test_place() {
     let res = place(6, 3, CENTER, CENTER, "Hi", &[]);
     assert_eq!(res, "      \n  Hi  \n      ");
 }
+
+/// Ported from upstream align: placement functions.
+#[test]
+fn test_position_fmt_and_default() {
+    use rusty_lipgloss::position::{place, place_horizontal, place_vertical};
+    let out = place(
+        10,
+        1,
+        rusty_lipgloss::CENTER,
+        rusty_lipgloss::TOP,
+        "hi",
+        &[],
+    );
+    assert!(out.contains("hi"));
+    assert!(rusty_lipgloss::size::width(&out) >= 10);
+    let out = place_horizontal(10, rusty_lipgloss::LEFT, "hi", &[]);
+    assert!(out.starts_with("hi"));
+    let out = place_vertical(3, rusty_lipgloss::BOTTOM, "hi", &[]);
+    assert!(out.ends_with("hi"));
+}
