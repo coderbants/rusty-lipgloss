@@ -157,3 +157,22 @@ fn test_blend_2d_wide() {
     let got = blend_2d(10, 1, 45.0, &stops);
     assert_eq!(got.len(), 10);
 }
+
+/// Ported from upstream blend_1d_pair: when both stops are NoColor, the
+/// fallback linear-interpolation branch runs.
+#[test]
+fn test_blend_1d_pair_nocolor_fallback() {
+    use rusty_lipgloss::blending::blend_1d_pair;
+    // Both NoColor -> blend_1d returns empty -> fallback match.
+    let c = blend_1d_pair(&Color::NoColor, &Color::NoColor, 0.5);
+    assert_eq!(c, Color::NoColor);
+    // NoColor start with a TrueColor end -> fallback `_ => start.clone()`.
+    let c = blend_1d_pair(&Color::NoColor, &rgba(255, 0, 0), 0.5);
+    assert_eq!(c, Color::NoColor);
+    // TrueColor start with NoColor end -> fallback `_ => start.clone()`.
+    let c = blend_1d_pair(&rgba(0, 0, 255), &Color::NoColor, 0.5);
+    assert_eq!(c, rgba(0, 0, 255));
+    // Both TrueColor with factor at an extreme -> linear interpolation.
+    let c = blend_1d_pair(&rgba(0, 0, 0), &rgba(255, 255, 255), 0.5);
+    assert!(matches!(c, Color::TrueColor { .. }));
+}

@@ -1224,3 +1224,29 @@ fn test_render_aligned_styled_whitespace() {
         .render("hi");
     assert!(out.contains("hi"));
 }
+
+/// Ported from upstream render internals: no-whitespace-style render paths
+/// (color_whitespace off) with padding, height and alignment.
+#[test]
+fn test_render_no_whitespace_style() {
+    let out = Style::new()
+        .color_whitespace(false)
+        .foreground("#ff0000")
+        .padding(&[1, 2, 1, 2])
+        .width(10)
+        .render("hi");
+    assert!(out.contains("hi"));
+    assert!(out.contains("\n"));
+}
+
+/// Ported from upstream render internals: underline/background fills the
+/// space styler (use_space_styler bg_color branch).
+#[test]
+fn test_render_space_styler_background() {
+    let out = Style::new()
+        .underline(true)
+        .underline_spaces(true)
+        .background("#ff0000")
+        .render("a b");
+    assert!(out.contains("48;2;255;0;0;4"));
+}
