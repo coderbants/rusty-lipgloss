@@ -136,3 +136,94 @@ fn test_style_blink_faint() {
     assert!(out.contains("5"));
     assert!(out.contains("2"));
 }
+
+#[test]
+fn test_truncate() {
+    use rusty_lipgloss::ansi::truncate;
+    assert_eq!(truncate("hello", 10, "…"), "hello");
+    assert_eq!(truncate("hello", 3, "…"), "he…");
+    assert_eq!(truncate("hello", 0, "…"), "…");
+    assert_eq!(truncate("hello", 2, "hello"), "he");
+}
+
+#[test]
+fn test_truncate_left() {
+    use rusty_lipgloss::ansi::truncate_left;
+    assert_eq!(truncate_left("hello", 10, "…"), "hello");
+    assert_eq!(truncate_left("hello", 3, "…"), "…lo");
+    assert_eq!(truncate_left("hello", 0, "…"), "…");
+}
+
+#[test]
+fn test_styled_whitespace() {
+    use rusty_lipgloss::ansi::Style;
+    use rusty_lipgloss::color::Color;
+    let s = Style {
+        bold: true,
+        faint: true,
+        italic: true,
+        blink: true,
+        reverse: true,
+        strikethrough: true,
+        bg_color: Some(Color::TrueColor { r: 0, g: 255, b: 0 }),
+        fg_color: Some(Color::Ansi16(9)),
+        ..Style::default()
+    };
+    let ws = s.string_whitespace();
+    assert!(ws.contains("1;2;3;5;7;9"));
+    assert!(ws.contains("91"));
+    assert!(ws.contains("48;2;0;255;0"));
+    // styled/styled_whitespace wrap the content.
+    assert!(s.styled("x").contains("x"));
+    assert!(s.styled_whitespace(" ").contains(" "));
+}
+
+#[test]
+fn test_color_seq_variants() {
+    use rusty_lipgloss::ansi::Style;
+    use rusty_lipgloss::color::Color;
+    // Ansi16 basic (<8) and bright (>=8) via style string.
+    let s = Style {
+        fg_color: Some(Color::Ansi16(3)),
+        ..Style::default()
+    };
+    assert_eq!(s.string(), "\x1b[33m");
+    let s = Style {
+        fg_color: Some(Color::Ansi16(9)),
+        ..Style::default()
+    };
+    assert_eq!(s.string(), "\x1b[91m");
+    // Adaptive/Complete resolve through color_seq.
+    let s = Style {
+        fg_color: Some(Color::Adaptive {
+            light: Box::new(Color::Ansi16(1)),
+            dark: Box::new(Color::Ansi16(2)),
+        }),
+        ..Style::default()
+    };
+    assert_eq!(s.string(), "\x1b[32m");
+    let s = Style {
+        fg_color: Some(Color::Complete {
+            true_color: Box::new(Color::Ansi16(4)),
+            ansi256: Box::new(Color::Ansi16(4)),
+            ansi: Box::new(Color::Ansi16(4)),
+        }),
+        ..Style::default()
+    };
+    assert_eq!(s.string(), "\x1b[34m");
+    // NoColor yields an empty color param (reset-style sequence).
+    let s = Style {
+        fg_color: Some(Color::NoColor),
+        ..Style::default()
+    };
+    assert_eq!(s.string(), "\x1b[m");
+}
+
+#[test]
+fn test_cut_st_osc() {
+    use rusty_lipgloss::ansi::cut;
+    // ST-terminated OSC (ESC \) is preserved.
+    let out = cut("\x1b]8;;https://x\x1b\\link\x1b]8;;\x1b\\", 0, 100);
+    assert!(out.contains("\x1b]8;;https://x\x1b\\"));
+    assert!(out.contains("link"));
+}
