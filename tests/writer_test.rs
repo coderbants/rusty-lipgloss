@@ -181,6 +181,14 @@ fn test_writer_detect_profile_env_matrix() {
         (&["GOOGLE_CLOUD_SHELL=1", "CLICOLOR_FORCE=1"], "TrueColor"),
         // WT_SESSION forces TrueColor.
         (&["WT_SESSION=abc", "CLICOLOR_FORCE=1"], "TrueColor"),
+        // TERM=kitty is a known truecolor terminal.
+        (&["TERM=kitty", "CLICOLOR_FORCE=1"], "TrueColor"),
+        // TERM=tmux-256color -> Ansi256.
+        (&["TERM=tmux-256color", "CLICOLOR_FORCE=1"], "Ansi256"),
+        // TERM=xterm -> Ansi (basic).
+        (&["TERM=xterm", "CLICOLOR_FORCE=1"], "Ansi"),
+        // TERM=xterm-direct -> TrueColor.
+        (&["TERM=xterm-direct", "CLICOLOR_FORCE=1"], "TrueColor"),
     ];
     for (env, expect) in cases {
         let mut cmd = Command::new(std::env::current_exe().unwrap());
@@ -245,4 +253,41 @@ fn test_writer_sgr_default_and_bright() {
     // 59 default ul preserved.
     let out = downsample_sgr("\x1b[59mhi\x1b[m", Profile::Ansi);
     assert!(out.contains("59"), "got: {out:?}");
+}
+
+/// Ported from upstream downsample: ANSI16/ANSI256 passthrough and grayscale.
+#[test]
+fn test_downsample_color_branches() {
+    use rusty_lipgloss::writer::downsample;
+    // Ansi16 passes through at all profiles >= Ansi.
+    assert_eq!(
+        downsample(&Color::Ansi16(9), Profile::Ansi),
+        Color::Ansi16(9)
+    );
+    assert_eq!(
+        downsample(&Color::Ansi16(9), Profile::Ansi256),
+        Color::Ansi16(9)
+    );
+    // Ansi256 at Ansi profile maps to Ansi16.
+    let c = downsample(&Color::Ansi256(9), Profile::Ansi);
+    assert!(matches!(c, Color::Ansi16(_)));
+    // TrueColor at Ansi256 maps to Ansi256.
+    let c = downsample(&Color::TrueColor { r: 255, g: 0, b: 0 }, Profile::Ansi256);
+    assert_eq!(c, Color::Ansi256(196));
+    // Any color at Ascii/NoTty -> NoColor.
+    assert_eq!(
+        downsample(&Color::Ansi16(9), Profile::Ascii),
+        Color::NoColor
+    );
+    assert_eq!(
+        downsample(&Color::Ansi256(9), Profile::NoTty),
+        Color::NoColor
+    );
+}
+
+/// Ported from upstream convert: 256-color gray ramp mapping.
+#[test]
+fn test_convert_256_grayscale() {
+    use rusty_lipgloss::writer::convert_256;
+    assert_eq!(convert_256(128, 128, 128), 244);
 }
