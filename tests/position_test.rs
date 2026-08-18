@@ -74,3 +74,21 @@ fn test_position_fmt_and_default() {
     let out = place_vertical(3, rusty_lipgloss::BOTTOM, "hi", &[]);
     assert!(out.ends_with("hi"));
 }
+
+/// Position Display formatting and align_text_vertical branches.
+#[test]
+fn test_position_display_and_vertical_align_branches() {
+    use rusty_lipgloss::align::{BOTTOM, CENTER};
+    // Display for Position.
+    assert_eq!(format!("{}", rusty_lipgloss::TOP), "0");
+    assert_eq!(format!("{}", rusty_lipgloss::CENTER), "0.5");
+    assert_eq!(format!("{}", BOTTOM), "1");
+    // Height smaller than content -> unchanged.
+    assert_eq!(place_vertical(1, CENTER, "hi\nho", &[]), "hi\nho");
+    // CENTER with odd remaining space distributes to the bottom.
+    let out = place_vertical(4, CENTER, "hi", &[]);
+    assert_eq!(out, "  \nhi\n  \n  ");
+    // Unknown/other position -> unchanged (matches the default arm).
+    let out = place_vertical(2, Position::default(), "hi", &[]);
+    assert_eq!(out, "hi\n  ");
+}
