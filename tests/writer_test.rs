@@ -159,23 +159,51 @@ fn test_writer_non_sgr_escapes() {
     assert_eq!(out, "clear");
 }
 
-/// Ported from upstream profile detection via NO_COLOR/CLICOLOR env in a
-/// non-TTY child process.
+/// Ported from upstream profile detection: env-driven profile selection via
+/// child-process probes (CI stdout is not a TTY, so isatty forces NoTty).
 #[test]
-fn test_writer_detect_profile_no_color() {
+fn test_writer_detect_profile_env_matrix() {
     use std::process::Command;
-    let out = Command::new(std::env::current_exe().unwrap())
-        .env("NO_COLOR", "1")
-        .env("RUST_LIPGLOSS_WRITER_PROBE", "1")
-        .args(["--exact", "probe_writer_detect_profile", "--nocapture"])
-        .output()
-        .expect("spawn");
-    assert!(out.status.success());
-    let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(stdout.contains("PROFILE="), "got: {stdout}");
+    let cases: &[(&[&str], &str)] = &[
+        // CLICOLOR_FORCE + TERM=xterm-256color -> Ansi256.
+        (&["CLICOLOR_FORCE=1", "TERM=xterm-256color"], "Ansi256"),
+        // CLICOLOR_FORCE + TERM=dumb -> Ansi (forced).
+        (&["CLICOLOR_FORCE=1", "TERM=dumb"], "Ansi"),
+        // NO_COLOR requires a TTY to cap; with CLICOLOR_FORCE the forced
+        // profile wins in a non-TTY child.
+        (
+            &["NO_COLOR=1", "CLICOLOR_FORCE=1", "TERM=xterm-256color"],
+            "Ansi256",
+        ),
+        // No env -> NoTty (no TTY in CI).
+        (&["TERM=xterm"], "NoTty"),
+        // GOOGLE_CLOUD_SHELL forces TrueColor via env_color_profile.
+        (&["GOOGLE_CLOUD_SHELL=1", "CLICOLOR_FORCE=1"], "TrueColor"),
+        // WT_SESSION forces TrueColor.
+        (&["WT_SESSION=abc", "CLICOLOR_FORCE=1"], "TrueColor"),
+    ];
+    for (env, expect) in cases {
+        let mut cmd = Command::new(std::env::current_exe().unwrap());
+        cmd.env("RUST_LIPGLOSS_WRITER_PROBE", "1").args([
+            "--exact",
+            "probe_writer_detect_profile",
+            "--nocapture",
+        ]);
+        for kv in env.iter() {
+            let (k, v) = kv.split_once('=').unwrap();
+            cmd.env(k, v);
+        }
+        let out = cmd.output().expect("spawn");
+        assert!(out.status.success(), "{env:?} failed: {out:?}");
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        assert!(
+            stdout.contains(&format!("PROFILE={expect}")),
+            "env {env:?} expected {expect}, got {stdout}"
+        );
+    }
 }
 
-/// Probe helper for env-based profile detection.
+/// Probe helper for the env matrix above.
 #[test]
 fn probe_writer_detect_profile() {
     if std::env::var("RUST_LIPGLOSS_WRITER_PROBE").is_err() {
