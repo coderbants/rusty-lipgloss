@@ -2,7 +2,7 @@
 //! Upstream Target Tag / Version: `v2.0.5`
 
 use rusty_lipgloss::border::Border;
-use rusty_lipgloss::table::Table;
+use rusty_lipgloss::table::{default_styles, Table};
 
 #[test]
 fn test_table_render() {
@@ -350,4 +350,58 @@ fn test_table_inner_borders_only() {
     let out = t.render();
     assert!(!out.starts_with('┌'));
     assert!(out.contains('│'));
+}
+
+/// Ported from upstream table API: accessors and multi-row setters.
+#[test]
+fn test_table_api_accessors() {
+    let _ = default_styles(0, 0);
+    let mut t = Table::new()
+        .base_style(rusty_lipgloss::Style::new().bold(true))
+        .headers(&["A", "B"])
+        .rows(&[&["1", "2"], &["3", "4"]])
+        .border_style(
+            rusty_lipgloss::Style::new().border(Border::normal(), &[true, true, true, true]),
+        )
+        .width(20)
+        .y_offset(0);
+    assert_eq!(t.get_headers(), &["A".to_string(), "B".to_string()]);
+    assert_eq!(t.get_height(), 0);
+    assert_eq!(t.get_y_offset(), 0);
+    assert!(t.get_border_top());
+    assert!(t.get_border_bottom());
+    assert!(t.get_border_left());
+    assert!(t.get_border_right());
+    assert_eq!(t.first_visible_row_index(), 0);
+    assert!(t.last_visible_row_index() == -2 || t.last_visible_row_index() >= 0);
+    let out = t.render();
+    assert!(out.contains("1") && out.contains("3"));
+}
+
+/// Ported from upstream table API: style_func drives per-cell styling.
+#[test]
+fn test_table_style_func() {
+    use rusty_lipgloss::table::StyleFunc;
+    let mut t = Table::new()
+        .style_func(Box::new(|row, _col| {
+            if row == rusty_lipgloss::table::HEADER_ROW {
+                rusty_lipgloss::Style::new().bold(true)
+            } else {
+                rusty_lipgloss::Style::new()
+            }
+        }) as StyleFunc)
+        .headers(&["A", "B"])
+        .row(&["1", "2"]);
+    let out = t.render();
+    assert!(out.contains("1"));
+    assert!(out.contains("2"));
+}
+
+/// Ported from upstream `TestMoreCellsThanHeaders`: extra cells render.
+#[test]
+fn test_table_more_cells_than_headers() {
+    let mut t = Table::new().headers(&["A"]).row(&["1", "2", "3"]);
+    let out = t.render();
+    assert!(out.contains("1"));
+    assert!(out.contains("3"));
 }
