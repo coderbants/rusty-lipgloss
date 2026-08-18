@@ -272,3 +272,55 @@ fn test_indexed_palette() {
     assert_eq!(g, 0);
     assert_eq!(b, 0);
 }
+
+/// Ported from upstream alpha/darken/lighten/complementary edge cases.
+#[test]
+fn test_color_ops_edge_cases() {
+    use rusty_lipgloss::color::{alpha, complementary, darken, lighten};
+    use rusty_lipgloss::Color;
+    // NoColor passes through darken/lighten/complementary.
+    assert_eq!(darken(Color::NoColor, 0.5), Color::NoColor);
+    assert_eq!(lighten(Color::NoColor, 0.5), Color::NoColor);
+    assert_eq!(complementary(Color::NoColor), Color::NoColor);
+    // alpha on non-truecolor is a passthrough.
+    assert_eq!(alpha(Color::NoColor, 0.5), Color::NoColor);
+    assert_eq!(alpha(Color::Ansi16(1), 0.5), Color::Ansi16(1));
+    // alpha on truecolor adjusts the alpha.
+    let c = alpha(Color::TrueColor { r: 255, g: 0, b: 0 }, 1.0);
+    assert!(matches!(c, Color::TrueColor { .. }));
+    // complementary on various hues (hsv_to_rgb branches).
+    let _ = complementary(Color::parse("#ff0000"));
+    let _ = complementary(Color::parse("#ffff00"));
+    let _ = complementary(Color::parse("#00ff00"));
+    let _ = complementary(Color::parse("#00ffff"));
+    let _ = complementary(Color::parse("#0000ff"));
+    let _ = complementary(Color::parse("#ff00ff"));
+}
+
+/// Ported from upstream rgb_to_hsl: the green-max branch.
+#[test]
+fn test_color_rgb_to_hsl_green() {
+    use rusty_lipgloss::color::is_dark_color;
+    use rusty_lipgloss::Color;
+    // Green-max colors hit the g branch of rgb_to_hsl.
+    assert!(!is_dark_color(&Color::parse("#00ff00")));
+    assert!(is_dark_color(&Color::parse("#008000")));
+}
+
+/// Ported from upstream parse_hex: 3-digit and short-form handling.
+#[test]
+fn test_color_parse_short_hex() {
+    use rusty_lipgloss::Color;
+    assert_eq!(
+        Color::parse("#fff"),
+        Color::TrueColor {
+            r: 255,
+            g: 255,
+            b: 255
+        }
+    );
+    assert_eq!(
+        Color::parse("#f00"),
+        Color::TrueColor { r: 255, g: 0, b: 0 }
+    );
+}

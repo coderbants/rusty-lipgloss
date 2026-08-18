@@ -132,3 +132,28 @@ fn test_blend_luv_rgb() {
     let (r, _, _) = blend_luv_rgb(&Color::NoColor, &rgba(255, 0, 0), 1.0);
     assert!((0.0..=1.0).contains(&r));
 }
+
+/// Ported from upstream blending: uneven segment distribution (some segments
+/// get one extra step).
+#[test]
+fn test_blend_1d_uneven_segments() {
+    let stops = vec![
+        rgba(255, 0, 0),
+        rgba(0, 255, 0),
+        rgba(0, 0, 255),
+        rgba(0, 0, 0),
+    ];
+    // 10 steps across 3 segments -> some segments get 4.
+    let got = blend_1d(10, &stops);
+    assert_eq!(got.len(), 10);
+}
+
+/// Ported from upstream blending: blend_2d with a wide gradient sampling.
+#[test]
+fn test_blend_2d_wide() {
+    let stops = vec![rgba(255, 0, 0), rgba(0, 0, 255)];
+    let got = blend_2d(1, 10, 0.0, &stops);
+    assert_eq!(got.len(), 10);
+    let got = blend_2d(10, 1, 45.0, &stops);
+    assert_eq!(got.len(), 10);
+}

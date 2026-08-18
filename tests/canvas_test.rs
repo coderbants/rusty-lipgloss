@@ -189,3 +189,25 @@ fn test_canvas_compose_and_draw() {
     let _ = Canvas::bounds(&c);
     let _ = c.cell_at(0, 0);
 }
+
+/// LayerHit empty/layer accessors and Compositor::new/add_layers.
+#[test]
+fn test_layer_hit_and_compositor_builders() {
+    use rusty_lipgloss::layer::{new_layer, Compositor, LayerHit};
+    let hit = LayerHit::default();
+    assert!(hit.empty());
+    assert_eq!(hit.id(), "");
+    assert!(hit.layer().is_none());
+
+    let l1 = new_layer("AAA", &[]).id("one").z(1);
+    let l2 = new_layer("BBB", &[]).id("two").z(2);
+    let mut comp = Compositor::new(&[l1]);
+    comp.add_layers(std::slice::from_ref(&l2));
+    let hit = comp.hit(0, 0);
+    assert!(!hit.empty());
+    assert_eq!(hit.id(), "two");
+    assert!(hit.layer().is_some());
+    // Compositor::new is an alias for new_compositor.
+    let comp2 = Compositor::new(&[l2]);
+    let _ = comp2.bounds();
+}
