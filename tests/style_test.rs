@@ -156,6 +156,35 @@ fn test_inherit() {
     );
 }
 
+/// Ported from upstream `TestStyleInherit`: inheriting a fully-populated style
+/// copies all non-margin/padding attributes but NOT margins or padding.
+#[test]
+fn test_inherit_full() {
+    let s = Style::new()
+        .bold(true)
+        .italic(true)
+        .underline(true)
+        .strikethrough(true)
+        .blink(true)
+        .faint(true)
+        .foreground("#ffffff")
+        .background("#111111")
+        .margin(&[1, 1, 1, 1])
+        .padding(&[1, 1, 1, 1]);
+    let i = Style::new().inherit(&s);
+    assert_eq!(i.get_bold(), s.get_bold());
+    assert_eq!(i.get_italic(), s.get_italic());
+    assert_eq!(i.get_underline(), s.get_underline());
+    assert_eq!(i.get_strikethrough(), s.get_strikethrough());
+    assert_eq!(i.get_blink(), s.get_blink());
+    assert_eq!(i.get_faint(), s.get_faint());
+    assert_eq!(i.get_foreground(), s.get_foreground());
+    assert_eq!(i.get_background(), s.get_background());
+    // Margins and padding are NOT inherited.
+    assert_ne!(i.get_margin(), s.get_margin());
+    assert_ne!(i.get_padding(), s.get_padding());
+}
+
 #[test]
 fn test_unset() {
     let s = Style::new().bold(true);
@@ -586,4 +615,47 @@ fn test_get_underline_color_and_style() {
     assert_eq!(s.get_underline_color(), red);
     let s = Style::new().underline_style(Underline::Curly);
     assert_eq!(s.get_underline_style(), Underline::Curly);
+}
+
+/// Ported from upstream `TestStyleCopy` extended: copying a style that sets
+/// every attribute must copy all of them, exercising every `set_from` branch.
+#[test]
+fn test_inherit_every_attribute() {
+    let s = Style::new()
+        .bold(true)
+        .italic(true)
+        .underline(true)
+        .underline_color(rusty_lipgloss::color::Color::parse("#f00"))
+        .strikethrough(true)
+        .blink(true)
+        .faint(true)
+        .foreground("#ffffff")
+        .background("#111111")
+        .width(30)
+        .height(2)
+        .align(&[rusty_lipgloss::CENTER, rusty_lipgloss::TOP])
+        .padding_char('.')
+        .margin_char('*')
+        .border(rusty_lipgloss::border::Border::normal(), &[true, true, true, true])
+        .border_foreground(&["#ff0000"])
+        .border_background(&["#00ff00"])
+        .border_foreground_blend(&["#111111", "#ffffff"])
+        .border_foreground_blend_offset(1)
+        .max_width(40)
+        .max_height(5)
+        .tab_width(8);
+    let i = Style::new().inherit(&s);
+    assert_eq!(i.get_width(), 30);
+    assert_eq!(i.get_height(), 2);
+    assert_eq!(i.get_max_width(), 40);
+    assert_eq!(i.get_max_height(), 5);
+    assert_eq!(i.get_tab_width(), 8);
+    assert_eq!(
+        i.get_underline_color(),
+        rusty_lipgloss::color::Color::parse("#f00")
+    );
+    assert_eq!(i.get_align_horizontal(), rusty_lipgloss::CENTER);
+    assert_eq!(i.get_align_vertical(), rusty_lipgloss::TOP);
+    assert_eq!(i.get_padding_char(), '.');
+    assert_eq!(i.get_margin_char(), '*');
 }
