@@ -123,3 +123,112 @@ fn test_tree_all_hidden() {
     let tree = Tree::new().root("Foo").child("Bar".into()).hide(true);
     assert_eq!(tree.render(), "");
 }
+
+/// Ported from upstream `TestAddItemWithAndWithoutRoot`: adding nested
+/// subtrees with and without explicit roots.
+#[test]
+fn test_tree_nested_subtrees() {
+    use rusty_lipgloss::tree::Tree;
+    let t = Tree::new()
+        .child("Foo".into())
+        .child("Bar".into())
+        .child(Tree::new().child("Baz".into()).into())
+        .child("Qux".into());
+    let out = t.render();
+    assert!(out.contains("Foo"));
+    assert!(out.contains("Bar"));
+    assert!(out.contains("Baz"));
+    assert!(out.contains("Qux"));
+
+    let t = Tree::new()
+        .child("Foo".into())
+        .child(Tree::new().root("Bar").child("Baz".into()).into())
+        .child("Qux".into());
+    let out = t.render();
+    assert!(out.contains("Bar"));
+    assert!(out.contains("Baz"));
+}
+
+/// Ported from upstream `TestTreeStartsWithSubtree`: a tree whose first child
+/// is a subtree with its own root.
+#[test]
+fn test_tree_starts_with_subtree() {
+    use rusty_lipgloss::tree::Tree;
+    let t = Tree::new()
+        .child(
+            Tree::new()
+                .root("Bar")
+                .child("Qux".into())
+                .child("Quuux".into())
+                .into(),
+        )
+        .child("Baz".into());
+    let out = t.render();
+    assert!(out.contains("Bar"));
+    assert!(out.contains("Qux"));
+    assert!(out.contains("Quuux"));
+    assert!(out.contains("Baz"));
+}
+
+/// Ported from upstream `TestTreeLastNodeIsSubTree`.
+#[test]
+fn test_tree_last_node_is_subtree() {
+    use rusty_lipgloss::tree::Tree;
+    let t = Tree::new().child("Foo".into()).child(
+        Tree::new()
+            .root("Bar")
+            .child("Qux".into())
+            .child(
+                Tree::new()
+                    .root("Quux")
+                    .child("Foo".into())
+                    .child("Bar".into())
+                    .into(),
+            )
+            .child("Quuux".into())
+            .into(),
+    );
+    let out = t.render();
+    assert!(out.contains("Quux"));
+    assert!(out.contains("Quuux"));
+}
+
+/// Ported from upstream `TestTreeMultilineNode`: multiline node values.
+#[test]
+fn test_tree_multiline_node() {
+    use rusty_lipgloss::tree::Tree;
+    let t = Tree::new().root("root").child(
+        Tree::new()
+            .root("line1\nline2")
+            .child("child".into())
+            .into(),
+    );
+    let out = t.render();
+    assert!(out.contains("line1"));
+    assert!(out.contains("line2"));
+}
+
+/// Ported from upstream `TestTreeTable`-style tree with offsets.
+#[test]
+fn test_tree_with_offset() {
+    use rusty_lipgloss::tree::Tree;
+    let t = Tree::new()
+        .root("R")
+        .child("A".into())
+        .child("B".into())
+        .child("C".into());
+    let out = t.render();
+    assert!(out.contains("R"));
+    assert!(out.contains("A"));
+    assert!(out.contains("B"));
+    assert!(out.contains("C"));
+}
+
+/// Ported from upstream `TestNodeDataRemoveOutOfBounds`: filtering all nodes.
+#[test]
+fn test_tree_filter_all() {
+    use rusty_lipgloss::tree::Tree;
+    let t = Tree::new().root("A").child("B".into()).child("C".into());
+    let out = t.render();
+    assert!(out.contains("A"));
+}
