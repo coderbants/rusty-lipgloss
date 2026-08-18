@@ -212,3 +212,37 @@ fn probe_writer_detect_profile() {
     let p = rusty_lipgloss::writer::detect_profile();
     println!("PROFILE={p:?}");
 }
+
+/// Ported from upstream print helpers: fprint/fprintln/sprint/sprintln.
+#[test]
+fn test_writer_print_helpers() {
+    use rusty_lipgloss::writer::{fprint, fprintln, sprint, sprintln};
+    let mut buf: Vec<u8> = Vec::new();
+    fprint(&mut buf, "hi").expect("fprint");
+    assert_eq!(buf, b"hi");
+    fprintln(&mut buf, "there").expect("fprintln");
+    assert_eq!(buf, b"hithere\n");
+    // sprint/sprintln downsample with the detected profile (NoTty in CI).
+    assert_eq!(sprint("plain"), "plain");
+    assert_eq!(sprintln("line"), "line\n");
+}
+
+/// Ported from upstream handleSgr: bright backgrounds, default fg/bg/ul codes.
+#[test]
+fn test_writer_sgr_default_and_bright() {
+    // 90-97 bright fg pass through.
+    let out = downsample_sgr("\x1b[95mhi\x1b[m", Profile::Ansi);
+    assert!(out.contains("95"), "got: {out:?}");
+    // 100-107 bright bg pass through.
+    let out = downsample_sgr("\x1b[105mhi\x1b[m", Profile::Ansi);
+    assert!(out.contains("105"), "got: {out:?}");
+    // 39 default fg is preserved.
+    let out = downsample_sgr("\x1b[39mhi\x1b[m", Profile::Ansi);
+    assert!(out.contains("39"), "got: {out:?}");
+    // 49 default bg preserved.
+    let out = downsample_sgr("\x1b[49mhi\x1b[m", Profile::Ansi);
+    assert!(out.contains("49"), "got: {out:?}");
+    // 59 default ul preserved.
+    let out = downsample_sgr("\x1b[59mhi\x1b[m", Profile::Ansi);
+    assert!(out.contains("59"), "got: {out:?}");
+}
