@@ -903,3 +903,60 @@ fn test_border_render_with_colors() {
         .render("hello");
     assert!(out.contains("\x1b[38;2;255;0;0;48;2;0;255;0m"));
 }
+
+/// Ported from upstream render internals: reverse mode styles whitespace
+/// (padding) separately, exercising the style_whitespace branches.
+#[test]
+fn test_render_reverse_styles_whitespace() {
+    let out = Style::new()
+        .reverse(true)
+        .foreground("#ffffff")
+        .background("#000000")
+        .padding(&[0, 2, 0, 2])
+        .render("hi");
+    assert!(out.contains("\x1b[7;38;2;255;255;255;48;2;0;0;0m"));
+}
+
+/// Ported from upstream render internals: underline spaces uses a separate
+/// space styler, exercising the use_space_styler branches.
+#[test]
+fn test_render_underline_spaces_styler() {
+    let out = Style::new()
+        .underline(true)
+        .underline_spaces(true)
+        .foreground("#ff0000")
+        .render("a b");
+    assert!(out.contains("4m"));
+}
+
+/// Ported from upstream render internals: strikethrough spaces styler.
+#[test]
+fn test_render_strikethrough_spaces_styler() {
+    let out = Style::new()
+        .strikethrough(true)
+        .strikethrough_spaces(true)
+        .foreground("#ff0000")
+        .render("a b");
+    assert_eq!(
+        out,
+        "\x1b[9;38;2;255;0;0ma\x1b[m\x1b[9;38;2;255;0;0m \x1b[m\x1b[9;38;2;255;0;0mb\x1b[m"
+    );
+}
+
+/// Ported from upstream render internals: inline mode.
+#[test]
+fn test_render_inline() {
+    let out = Style::new()
+        .inline(true)
+        .foreground("#ff0000")
+        .render("hi\nho");
+    // Inline mode removes newlines.
+    assert_eq!(out, "\x1b[38;2;255;0;0mhiho\x1b[m");
+}
+
+/// Ported from upstream render internals: max-width truncation.
+#[test]
+fn test_render_max_width() {
+    let out = Style::new().max_width(3).render("abcdef");
+    assert_eq!(out, "abc");
+}
