@@ -1031,3 +1031,59 @@ fn test_get_frame_size() {
     assert_eq!(x, 6 + 6 + 2); // margin(4+2) + padding(4+2) + border(1+1)
     assert_eq!(y, 4 + 4 + 2); // margin(1+3) + padding(1+3) + border(1+1)
 }
+
+/// Ported from upstream style getters: get_border returns the style + side flags.
+#[test]
+fn test_get_border_and_align() {
+    use rusty_lipgloss::border::Border;
+    let s = Style::new()
+        .border(Border::rounded(), &[true, false, true, true])
+        .align_horizontal(rusty_lipgloss::CENTER)
+        .align_vertical(rusty_lipgloss::BOTTOM);
+    let (b, top, right, bottom, left) = s.get_border();
+    assert_eq!(b.top_left, "╭");
+    assert!(top);
+    assert!(!right);
+    assert!(bottom);
+    assert!(left);
+    assert_eq!(s.get_align_horizontal(), rusty_lipgloss::CENTER);
+    assert_eq!(s.get_align_vertical(), rusty_lipgloss::BOTTOM);
+    // Unset border getters default to false / empty border.
+    let s = Style::new();
+    assert!(!s.get_border_top());
+    assert!(!s.get_border_right());
+    assert!(!s.get_border_bottom());
+    assert!(!s.get_border_left());
+    assert_eq!(s.get_border_style(), Border::default());
+}
+
+/// Ported from upstream style setters: individual color/align/padding setters.
+#[test]
+fn test_individual_setters() {
+    use rusty_lipgloss::color::Color;
+    let s = Style::new()
+        .foreground_color(Color::parse("#ff0000"))
+        .align_horizontal(rusty_lipgloss::LEFT)
+        .align_vertical(rusty_lipgloss::TOP)
+        .padding_left(1)
+        .padding_top(2)
+        .padding_bottom(3)
+        .padding_right(4)
+        .color_whitespace(true)
+        .margin_top(1)
+        .margin_bottom(1)
+        .margin_left(2)
+        .margin_right(2)
+        .transform(|x| x.to_string())
+        .set_string(&["set"]);
+    assert_eq!(s.get_foreground(), Color::parse("#ff0000"));
+    assert_eq!(s.get_padding(), (2, 4, 3, 1));
+    assert_eq!(s.get_margin(), (1, 2, 1, 2));
+    assert!(s.get_color_whitespace());
+    assert_eq!(s.value(), "set");
+    // set_string + render merges value and arg.
+    let s = Style::new().set_string(&["hi"]);
+    let out = s.render("there");
+    assert!(out.contains("hi"));
+    assert!(out.contains("there"));
+}
