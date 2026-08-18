@@ -165,3 +165,27 @@ fn test_compositor_render_z_order() {
     let out2 = comp.render();
     assert_eq!(out, out2);
 }
+
+/// Canvas compose + Drawable/Screen trait paths.
+#[test]
+fn test_canvas_compose_and_draw() {
+    use rusty_lipgloss::canvas::{new_canvas, Canvas};
+    use rusty_lipgloss::layer::new_layer;
+    let mut c = new_canvas(5, 2);
+    let mut l = new_layer("hi", &[]);
+    c.compose(&mut l);
+    let out = c.render();
+    assert!(out.contains("hi"));
+    // Draw canvas onto another canvas.
+    let mut target = new_canvas(10, 4);
+    let area = rusty_ultraviolet::Rectangle {
+        min: (0, 0),
+        max: (10, 4),
+    };
+    c.draw(&mut target, area);
+    let out = target.render();
+    assert!(out.contains("hi"));
+    // Trait methods via public API.
+    let _ = Canvas::bounds(&c);
+    let _ = c.cell_at(0, 0);
+}
