@@ -1087,3 +1087,49 @@ fn test_individual_setters() {
     assert!(out.contains("hi"));
     assert!(out.contains("there"));
 }
+
+/// Ported from upstream style API: aggregate border unsetters.
+#[test]
+fn test_unset_border_aggregates() {
+    use rusty_lipgloss::border::Border;
+    let s = Style::new()
+        .border(Border::normal(), &[true, true, true, true])
+        .border_foreground(&["#ff0000"])
+        .border_background(&["#00ff00"]);
+    assert_ne!(
+        s.get_border_top_foreground(),
+        rusty_lipgloss::color::Color::NoColor
+    );
+    let u = s.clone().unset_border_foreground();
+    assert_eq!(
+        u.get_border_top_foreground(),
+        rusty_lipgloss::color::Color::NoColor
+    );
+    assert_eq!(
+        u.get_border_right_foreground(),
+        rusty_lipgloss::color::Color::NoColor
+    );
+    let u = s.clone().unset_border_background();
+    assert_eq!(
+        u.get_border_top_background(),
+        rusty_lipgloss::color::Color::NoColor
+    );
+    assert_eq!(
+        u.get_border_left_background(),
+        rusty_lipgloss::color::Color::NoColor
+    );
+}
+
+/// Ported from upstream style API: which_sides_int/bool variants through
+/// padding/margin shorthand arrays of length 2/3.
+#[test]
+fn test_padding_margin_shorthand() {
+    let s = Style::new().padding(&[1, 2]);
+    assert_eq!(s.get_padding(), (1, 2, 1, 2));
+    let s = Style::new().padding(&[1, 2, 3]);
+    assert_eq!(s.get_padding(), (1, 2, 3, 2));
+    let s = Style::new().margin(&[1, 2]);
+    assert_eq!(s.get_margin(), (1, 2, 1, 2));
+    let s = Style::new().margin(&[1, 2, 3]);
+    assert_eq!(s.get_margin(), (1, 2, 3, 2));
+}
