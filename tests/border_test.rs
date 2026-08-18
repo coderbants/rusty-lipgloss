@@ -61,3 +61,40 @@ fn test_max_rune_width() {
     assert_eq!(max_rune_width("+"), 1);
     assert_eq!(max_rune_width("╭"), 1);
 }
+
+/// Ported from upstream `NormalBorder()` free functions: the top-level border
+/// constructors match the Border::preset forms.
+#[test]
+fn test_top_level_border_functions() {
+    use rusty_lipgloss::border::{
+        block_border, double_border, inner_half_block_border, normal_border,
+        outer_half_block_border, rounded_border, thick_border,
+    };
+    assert_eq!(normal_border().top_left, Border::normal().top_left);
+    assert_eq!(rounded_border().top_left, Border::rounded().top_left);
+    assert_eq!(block_border().top, Border::block().top);
+    assert_eq!(
+        outer_half_block_border().top,
+        Border::outer_half_block().top
+    );
+    assert_eq!(
+        inner_half_block_border().top,
+        Border::inner_half_block().top
+    );
+    assert_eq!(thick_border().middle, Border::thick().middle);
+    assert_eq!(double_border().middle, Border::double().middle);
+}
+
+/// Ported from upstream `BorderBlend`: blending border colors with offsets.
+#[test]
+fn test_border_blend_new() {
+    use rusty_lipgloss::border::BorderBlend;
+    use rusty_lipgloss::color::Color;
+    let colors = vec![Color::parse("#ff0000"), Color::parse("#00ff00")];
+    let b = BorderBlend::new(2, 1, &colors, 0);
+    assert!(!b.top_gradient.is_empty());
+    assert_eq!(b.top_gradient.len(), 4);
+    // Non-zero offset rotates the gradient.
+    let b2 = BorderBlend::new(2, 1, &colors, 1);
+    assert_eq!(b2.top_gradient.len(), 4);
+}
