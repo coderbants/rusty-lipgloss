@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use rusty_lipgloss::tree::{rounded_enumerator, Child, Tree};
+use rusty_lipgloss::tree::{rounded_enumerator, Child, Node, Tree};
 
 fn t(value: &str) -> Tree {
     Tree::new().root(value)
@@ -53,4 +53,70 @@ fn test_tree_string_leaves() {
         .child(Child::Str("a".to_string()))
         .child(Child::Str("b".to_string()));
     assert_eq!(tree.render(), "Root\n├── a\n└── b");
+}
+
+/// Ported from upstream `TestAt`: out-of-range indices return `None`.
+#[test]
+fn test_tree_children_at() {
+    use rusty_lipgloss::tree::{new_string_data, Children};
+    let data = new_string_data(&["Foo", "Bar"]);
+    assert_eq!(
+        <Vec<Node> as Children>::at(&data, 0).map(|n| n.value()),
+        Some("Foo")
+    );
+    assert!(<Vec<Node> as Children>::at(&data, 10).is_none());
+}
+
+/// Ported from upstream `TestFilter`.
+#[test]
+fn test_tree_filter() {
+    use rusty_lipgloss::tree::{new_filter, new_string_data, Children};
+    let data = new_string_data(&["Foo", "Bar", "Baz", "Nope"]);
+    let filtered = new_filter(&data, Box::new(|index| index != 3));
+    assert_eq!(filtered.length(), 3);
+    assert_eq!(Children::at(&filtered, 1).map(|n| n.value()), Some("Bar"));
+    assert!(Children::at(&filtered, 10).is_none());
+}
+
+/// Ported from upstream `TestTreeStyleAt`: a custom enumerator that inspects
+/// the item value.
+#[test]
+fn test_tree_custom_enumerator_inspects_value() {
+    use rusty_lipgloss::tree::{new_string_data, Children};
+    use std::sync::Arc;
+
+    let data: Vec<Child> = vec!["Foo".into(), "Bar".into()];
+    let tree = Tree::new()
+        .root("Root")
+        .child_nodes(&data)
+        .enumerator(Arc::new(|children: &dyn Children, i: usize| {
+            if children.at(i).map(|n| n.value()) == Some("Foo") {
+                ">".to_string()
+            } else {
+                "-".to_string()
+            }
+        }));
+    let out = tree.render();
+    assert!(out.contains("> Foo"));
+    assert!(out.contains("- Bar"));
+}
+
+/// Ported from upstream `TestRootStyle`.
+#[test]
+fn test_tree_root_and_item_style() {
+    use rusty_lipgloss::style::Style;
+    let tree = Tree::new()
+        .root("Root")
+        .child("Foo".into())
+        .child("Baz".into())
+        .root_style(Style::new().background("#5A56E0"))
+        .item_style(Style::new().background("#04B575"));
+    assert!(tree.render().contains("Root"));
+}
+
+/// Ported from upstream `TestTreeAllHidden`.
+#[test]
+fn test_tree_all_hidden() {
+    let tree = Tree::new().root("Foo").child("Bar".into()).hide(true);
+    assert_eq!(tree.render(), "");
 }
