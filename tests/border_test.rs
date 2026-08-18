@@ -98,3 +98,14 @@ fn test_border_blend_new() {
     let b2 = BorderBlend::new(2, 1, &colors, 1);
     assert_eq!(b2.top_gradient.len(), 4);
 }
+
+/// Ported from upstream free border constructors.
+#[test]
+fn test_remaining_border_functions() {
+    use rusty_lipgloss::border::{ascii_border, hidden_border, markdown_border, no_border};
+    assert_eq!(hidden_border().top, " ");
+    assert_eq!(markdown_border().top, "-");
+    assert_eq!(ascii_border().top_left, "+");
+    assert_eq!(no_border().top, "");
+    assert_eq!(no_border().left, "");
+}

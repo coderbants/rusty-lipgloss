@@ -203,7 +203,7 @@ impl Color {
     /// Renders the ANSI escape code sequence for an underline color.
     pub fn render_ul(&self) -> String {
         match self {
-            Color::Ansi16(c) => format!("\x1b[5{}m", 50 + c),
+            Color::Ansi16(c) => format!("\x1b[58;5;{}m", c),
             Color::Ansi256(c) => format!("\x1b[58;5;{}m", c),
             Color::TrueColor { r, g, b } => format!("\x1b[58;2;{};{};{}m", r, g, b),
             Color::Adaptive { dark, .. } => dark.render_ul(),

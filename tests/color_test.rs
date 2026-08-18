@@ -324,3 +324,41 @@ fn test_color_parse_short_hex() {
         Color::TrueColor { r: 255, g: 0, b: 0 }
     );
 }
+
+/// Ported from upstream color Display/adaptive/complete fmt and render paths.
+#[test]
+fn test_color_adaptive_complete_fmt() {
+    use rusty_lipgloss::color::{AdaptiveColor, CompleteColor};
+    use rusty_lipgloss::Color;
+    assert_eq!(
+        format!(
+            "{}",
+            AdaptiveColor {
+                light: "#fff".into(),
+                dark: "#000".into()
+            }
+        ),
+        "Light: #fff, Dark: #000"
+    );
+    let cc = CompleteColor {
+        true_color: "#ff0000".into(),
+        ansi256: "196".into(),
+        ansi: "9".into(),
+    };
+    assert_eq!(format!("{cc}"), "#ff0000");
+    assert_eq!(cc.render_bg(), Color::parse("#ff0000").render_bg());
+    // Bright ANSI underline.
+    assert_eq!(Color::Ansi16(9).render_ul(), "\x1b[58;5;9m");
+}
+
+/// Ported from upstream complementary: hue wrap-around (h >= 360).
+#[test]
+fn test_complementary_hue_wrap() {
+    use rusty_lipgloss::color::complementary;
+    use rusty_lipgloss::Color;
+    // A color whose hue + 180 >= 360 wraps.
+    let c = complementary(Color::parse("#ff00ff"));
+    assert!(matches!(c, Color::TrueColor { .. }));
+    let c = complementary(Color::parse("#800000"));
+    assert!(matches!(c, Color::TrueColor { .. }));
+}

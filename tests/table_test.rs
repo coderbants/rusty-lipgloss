@@ -479,3 +479,25 @@ fn test_table_scrolling_exact_fit() {
     let out = t.render();
     assert!(!out.is_empty());
 }
+
+/// Ported from upstream table getters for border flags.
+#[test]
+fn test_table_border_flag_getters() {
+    let t = Table::new()
+        .border(Border::normal())
+        .border_header(false)
+        .border_column(false)
+        .border_row(false);
+    assert!(!t.get_border_header());
+    assert!(!t.get_border_column());
+    assert!(!t.get_border_row());
+    let t = Table::new()
+        .border(Border::normal())
+        .border_header(true)
+        .border_column(true)
+        .border_row(true);
+    assert!(t.get_border_header());
+    assert!(t.get_border_column());
+    assert!(t.get_border_row());
+    let _ = t.visible_rows();
+}

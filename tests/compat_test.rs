@@ -43,3 +43,21 @@ fn test_compat_complete_color() {
     };
     let (_, _, _, _) = c.rgba();
 }
+
+/// Ported from upstream CompleteAdaptiveColor and CompleteColor rgba paths.
+#[test]
+fn test_compat_complete_adaptive() {
+    use rusty_lipgloss::compat::{CompleteAdaptiveColor, CompleteColor};
+    let cc = CompleteColor {
+        true_color: rusty_lipgloss::Color::parse("#FF0000"),
+        ansi256: rusty_lipgloss::Color::parse("9"),
+        ansi: rusty_lipgloss::Color::parse("1"),
+    };
+    let cac = CompleteAdaptiveColor {
+        light: cc.clone(),
+        dark: cc,
+    };
+    let (r, _, _, _) = cac.rgba();
+    // has_dark_background defaults true in CI; values are 16-bit channels.
+    assert!(r % 0x100 == 0);
+}
