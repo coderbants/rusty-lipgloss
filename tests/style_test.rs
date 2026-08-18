@@ -1133,3 +1133,39 @@ fn test_padding_margin_shorthand() {
     let s = Style::new().margin(&[1, 2, 3]);
     assert_eq!(s.get_margin(), (1, 2, 3, 2));
 }
+
+/// Ported from upstream render internals: apply_border corner combinations.
+#[test]
+fn test_render_border_corner_combos() {
+    use rusty_lipgloss::border::Border;
+    // Top without left or right: corners cleared.
+    let out = Style::new()
+        .border(Border::normal(), &[true, false, false, false])
+        .render("hi");
+    assert!(out.starts_with("─"));
+    // Top + right only: top-left cleared.
+    let out = Style::new()
+        .border(Border::normal(), &[true, true, false, false])
+        .render("hi");
+    assert!(out.starts_with("─"));
+    // Top + left only: top-right cleared.
+    let out = Style::new()
+        .border(Border::normal(), &[true, false, false, true])
+        .render("hi");
+    assert!(out.starts_with("┌"));
+    // Bottom without left or right: corners cleared.
+    let out = Style::new()
+        .border(Border::normal(), &[false, false, true, false])
+        .render("hi");
+    assert!(out.ends_with("─"));
+    // Bottom + left only: bottom-right cleared.
+    let out = Style::new()
+        .border(Border::normal(), &[false, false, true, true])
+        .render("hi");
+    assert!(out.lines().last().unwrap().starts_with("└"));
+    // Bottom + right only: bottom-left cleared.
+    let out = Style::new()
+        .border(Border::normal(), &[false, true, true, false])
+        .render("hi");
+    assert!(out.lines().last().unwrap().ends_with("┘"));
+}

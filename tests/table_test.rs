@@ -450,3 +450,32 @@ fn test_table_height_shrink_single_row() {
     let out = t.render();
     assert!(!out.is_empty());
 }
+
+/// Ported from upstream `TestTableHeightExtra`: with a tall height, all rows
+/// fit and the y-offset scrolls the window (top-row add loop).
+#[test]
+fn test_table_scrolling_all_rows_fit_with_offset() {
+    let mut t = Table::new()
+        .height(20)
+        .y_offset(3)
+        .headers(&["A", "B"])
+        .row(&["1", "2"])
+        .row(&["3", "4"])
+        .row(&["5", "6"])
+        .row(&["7", "8"])
+        .row(&["9", "0"]);
+    let out = t.render();
+    assert!(!out.is_empty());
+}
+
+/// Ported from upstream `TestTableHeightExact`: height exactly fits rows.
+#[test]
+fn test_table_scrolling_exact_fit() {
+    let mut t = Table::new()
+        .height(6)
+        .headers(&["A", "B"])
+        .row(&["1", "2"])
+        .row(&["3", "4"]);
+    let out = t.render();
+    assert!(!out.is_empty());
+}
