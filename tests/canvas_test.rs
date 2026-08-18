@@ -211,3 +211,25 @@ fn test_layer_hit_and_compositor_builders() {
     let comp2 = Compositor::new(&[l2]);
     let _ = comp2.bounds();
 }
+
+/// Canvas-as-Drawable: composing a canvas onto another canvas exercises the
+/// Drawable/Screen trait impl methods.
+#[test]
+fn test_canvas_compose_canvas() {
+    use rusty_lipgloss::canvas::{new_canvas, Canvas};
+    let mut src = new_canvas(3, 1);
+    src.set_cell(0, 0, Some(&Cell::new("x")));
+    let mut dst = new_canvas(5, 2);
+    dst.compose(&mut src);
+    let out = dst.render();
+    assert!(out.contains("x"));
+    // Draw via the Drawable path (canvas drawing onto a canvas screen).
+    let mut target = new_canvas(5, 2);
+    let area = rusty_ultraviolet::Rectangle {
+        min: (1, 0),
+        max: (4, 1),
+    };
+    Canvas::draw(&src, &mut target, area);
+    let out = target.render();
+    assert!(out.contains("x"));
+}

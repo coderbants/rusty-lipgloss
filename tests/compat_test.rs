@@ -61,3 +61,33 @@ fn test_compat_complete_adaptive() {
     // has_dark_background defaults true in CI; values are 16-bit channels.
     assert!(r % 0x100 == 0);
 }
+
+/// Ported from upstream: adaptive rgba with a LIGHT background (COLORFGBG).
+#[test]
+fn test_compat_adaptive_light_bg() {
+    use std::process::Command;
+    let out = Command::new(std::env::current_exe().unwrap())
+        .env("COLORFGBG", "0;15")
+        .env("RUST_LIPGLOSS_COMPAT_PROBE", "1")
+        .args(["--exact", "probe_compat_adaptive", "--nocapture"])
+        .output()
+        .expect("spawn");
+    assert!(out.status.success(), "probe failed: {out:?}");
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    // Light bg -> the light color (0x0000) is used.
+    assert!(stdout.contains("LIGHT="), "got: {stdout}");
+}
+
+/// Probe helper: adaptive rgba with the process COLORFGBG.
+#[test]
+fn probe_compat_adaptive() {
+    if std::env::var("RUST_LIPGLOSS_COMPAT_PROBE").is_err() {
+        return;
+    }
+    let c = rusty_lipgloss::compat::AdaptiveColor {
+        light: rusty_lipgloss::Color::parse("#000000"),
+        dark: rusty_lipgloss::Color::parse("#FFFFFF"),
+    };
+    let (r, _, _, _) = c.rgba();
+    println!("LIGHT={r}");
+}
