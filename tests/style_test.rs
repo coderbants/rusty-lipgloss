@@ -728,3 +728,178 @@ fn test_unset_all_properties() {
     assert_eq!(u.value(), "");
     let _ = Color::default();
 }
+
+/// Ported from upstream `TestBorderStyle`/border color setters: setting border
+/// colors per-side and via shorthand arrays.
+#[test]
+fn test_border_side_colors() {
+    use rusty_lipgloss::border::Border;
+    // One color -> all sides.
+    let s = Style::new()
+        .border(Border::normal(), &[true, true, true, true])
+        .border_foreground(&["#ff0000"]);
+    assert_eq!(
+        s.get_border_top_foreground(),
+        rusty_lipgloss::color::Color::parse("#ff0000")
+    );
+    assert_eq!(
+        s.get_border_left_foreground(),
+        rusty_lipgloss::color::Color::parse("#ff0000")
+    );
+    // Two colors -> top/bottom, right/left.
+    let s = Style::new().border_foreground(&["#ff0000", "#00ff00"]);
+    assert_eq!(
+        s.get_border_top_foreground(),
+        rusty_lipgloss::color::Color::parse("#ff0000")
+    );
+    assert_eq!(
+        s.get_border_right_foreground(),
+        rusty_lipgloss::color::Color::parse("#00ff00")
+    );
+    assert_eq!(
+        s.get_border_bottom_foreground(),
+        rusty_lipgloss::color::Color::parse("#ff0000")
+    );
+    assert_eq!(
+        s.get_border_left_foreground(),
+        rusty_lipgloss::color::Color::parse("#00ff00")
+    );
+    // Three colors -> top, right/bottom, left.
+    let s = Style::new().border_foreground(&["#ff0000", "#00ff00", "#0000ff"]);
+    assert_eq!(
+        s.get_border_top_foreground(),
+        rusty_lipgloss::color::Color::parse("#ff0000")
+    );
+    assert_eq!(
+        s.get_border_right_foreground(),
+        rusty_lipgloss::color::Color::parse("#00ff00")
+    );
+    assert_eq!(
+        s.get_border_bottom_foreground(),
+        rusty_lipgloss::color::Color::parse("#0000ff")
+    );
+    assert_eq!(
+        s.get_border_left_foreground(),
+        rusty_lipgloss::color::Color::parse("#00ff00")
+    );
+    // Four colors.
+    let s = Style::new().border_foreground(&["#ff0000", "#00ff00", "#0000ff", "#ffff00"]);
+    assert_eq!(
+        s.get_border_top_foreground(),
+        rusty_lipgloss::color::Color::parse("#ff0000")
+    );
+    assert_eq!(
+        s.get_border_right_foreground(),
+        rusty_lipgloss::color::Color::parse("#00ff00")
+    );
+    assert_eq!(
+        s.get_border_bottom_foreground(),
+        rusty_lipgloss::color::Color::parse("#0000ff")
+    );
+    assert_eq!(
+        s.get_border_left_foreground(),
+        rusty_lipgloss::color::Color::parse("#ffff00")
+    );
+    // Per-side setters.
+    let s = Style::new()
+        .border_top_foreground("#111111")
+        .border_right_foreground("#222222")
+        .border_bottom_foreground("#333333")
+        .border_left_foreground("#444444");
+    assert_eq!(
+        s.get_border_top_foreground(),
+        rusty_lipgloss::color::Color::parse("#111111")
+    );
+    assert_eq!(
+        s.get_border_right_foreground(),
+        rusty_lipgloss::color::Color::parse("#222222")
+    );
+    assert_eq!(
+        s.get_border_bottom_foreground(),
+        rusty_lipgloss::color::Color::parse("#333333")
+    );
+    assert_eq!(
+        s.get_border_left_foreground(),
+        rusty_lipgloss::color::Color::parse("#444444")
+    );
+    // Backgrounds, same variants.
+    let s = Style::new().border_background(&["#ff0000"]);
+    assert_eq!(
+        s.get_border_top_background(),
+        rusty_lipgloss::color::Color::parse("#ff0000")
+    );
+    let s = Style::new().border_background(&["#ff0000", "#00ff00"]);
+    assert_eq!(
+        s.get_border_top_background(),
+        rusty_lipgloss::color::Color::parse("#ff0000")
+    );
+    assert_eq!(
+        s.get_border_right_background(),
+        rusty_lipgloss::color::Color::parse("#00ff00")
+    );
+    let s = Style::new()
+        .border_top_background("#111111")
+        .border_right_background("#222222")
+        .border_bottom_background("#333333")
+        .border_left_background("#444444");
+    assert_eq!(
+        s.get_border_top_background(),
+        rusty_lipgloss::color::Color::parse("#111111")
+    );
+    assert_eq!(
+        s.get_border_right_background(),
+        rusty_lipgloss::color::Color::parse("#222222")
+    );
+    assert_eq!(
+        s.get_border_bottom_background(),
+        rusty_lipgloss::color::Color::parse("#333333")
+    );
+    assert_eq!(
+        s.get_border_left_background(),
+        rusty_lipgloss::color::Color::parse("#444444")
+    );
+    // Border blend.
+    let s = Style::new()
+        .border_foreground_blend(&["#111111", "#ffffff"])
+        .border_foreground_blend_offset(2);
+    assert_eq!(s.get_border_foreground_blend_offset(), 2);
+}
+
+/// Ported from upstream `TestBorderStyle`/`TestStyleRender` render paths:
+/// rendering a bordered style with per-side foreground/background colors.
+#[test]
+fn test_border_render_with_colors() {
+    use rusty_lipgloss::border::Border;
+    // Plain border, no colors.
+    let out = Style::new()
+        .border(Border::normal(), &[true, true, true, true])
+        .render("hello");
+    assert!(out.starts_with('┌'));
+    assert!(out.contains('│'));
+    // Border with foreground color -> exercises style_border.
+    let out = Style::new()
+        .border(Border::normal(), &[true, true, true, true])
+        .border_foreground(&["#ff0000"])
+        .render("hello");
+    assert!(out.contains("\x1b[38;2;255;0;0m"));
+    // Border with background color.
+    let out = Style::new()
+        .border(Border::normal(), &[true, true, true, true])
+        .border_background(&["#ff0000"])
+        .render("hello");
+    assert!(out.contains("\x1b[48;2;255;0;0m"));
+    // Border with blend colors.
+    let out = Style::new()
+        .border(Border::normal(), &[true, true, true, true])
+        .border_foreground_blend(&["#ff0000", "#00ff00"])
+        .border_foreground_blend_offset(0)
+        .render("hello");
+    assert!(out.contains("\x1b[38;2;"));
+    // Border with both fg and bg.
+    let out = Style::new()
+        .border(Border::normal(), &[true, true, true, true])
+        .border_foreground(&["#ff0000"])
+        .border_background(&["#00ff00"])
+        .render("hello");
+    assert!(out.contains("\x1b[38;2;255;0;0;48;2;0;255;0m"));
+}
