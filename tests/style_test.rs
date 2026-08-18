@@ -1196,3 +1196,31 @@ fn test_render_border_style_all_sides() {
     assert!(out.starts_with("┌"));
     assert!(out.contains(' '));
 }
+
+/// Ported from upstream render internals: aligned whitespace is styled when a
+/// foreground color is set (exercises the styled-space branches).
+#[test]
+fn test_render_aligned_styled_whitespace() {
+    use rusty_lipgloss::align::RIGHT;
+    // Left align (default) with foreground.
+    let out = Style::new()
+        .width(10)
+        .align_horizontal(rusty_lipgloss::LEFT)
+        .foreground("#ff0000")
+        .render("hi");
+    assert!(out.starts_with("\x1b[38;2;255;0;0mhi"));
+    // Right align with foreground styles the left spaces.
+    let out = Style::new()
+        .width(10)
+        .align_horizontal(RIGHT)
+        .foreground("#ff0000")
+        .render("hi");
+    assert!(out.contains("hi"));
+    // Center align with foreground styles both sides.
+    let out = Style::new()
+        .width(10)
+        .align_horizontal(rusty_lipgloss::CENTER)
+        .foreground("#ff0000")
+        .render("hi");
+    assert!(out.contains("hi"));
+}

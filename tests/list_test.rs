@@ -197,3 +197,13 @@ fn test_list_display() {
     let l = List::new().item("A").item("B");
     assert_eq!(format!("{l}"), l.render());
 }
+
+/// Ported from upstream list API: value/string accessors.
+#[test]
+fn test_list_value_and_string() {
+    use rusty_lipgloss::list::List;
+    let l = List::new().item("Foo").item("Bar");
+    assert_eq!(l.value(), "");
+    let out = l.string();
+    assert!(out.contains("Foo"));
+}
