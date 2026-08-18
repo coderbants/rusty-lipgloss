@@ -203,8 +203,8 @@ pub fn strip(s: &str) -> String {
         if c == '\x1b' {
             // Consume the escape sequence.
             if it.peek() == Some(&'[') || it.peek() == Some(&']') {
-                let _ = it.next();
-                if it.peek() == Some(&']') {
+                let b = it.next().unwrap();
+                if b == ']' {
                     // OSC sequence: read until BEL (0x07) or ST (ESC \).
                     while let Some(c) = it.next() {
                         if c == '\x07' {

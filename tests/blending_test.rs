@@ -105,3 +105,30 @@ fn test_blend_1d_nocolor_stops() {
     let got = blend_1d(4, &[Color::NoColor]);
     assert_eq!(got.len(), 0);
 }
+
+/// Ported from upstream LUV blending: LUV-space interpolation round-trips.
+#[test]
+fn test_blend_luv_pair() {
+    use rusty_lipgloss::blending::blend_luv_pair;
+    let c = blend_luv_pair(&rgba(255, 0, 0), &rgba(0, 0, 255), 0.5);
+    assert!(matches!(c, Color::TrueColor { .. }));
+    let c = blend_luv_pair(&rgba(0, 0, 0), &rgba(255, 255, 255), 0.0);
+    assert_eq!(c, rgba(0, 0, 0));
+    let c = blend_luv_pair(&rgba(0, 0, 0), &rgba(255, 255, 255), 1.0);
+    assert_eq!(c, rgba(255, 255, 255));
+}
+
+/// Ported from upstream LUV blending: raw LUV-space RGB components.
+#[test]
+fn test_blend_luv_rgb() {
+    use rusty_lipgloss::blending::blend_luv_rgb;
+    let (r, g, b) = blend_luv_rgb(&rgba(0, 0, 0), &rgba(255, 255, 255), 0.0);
+    assert_eq!((r, g, b), (0.0, 0.0, 0.0));
+    let (r, g, b) = blend_luv_rgb(&rgba(0, 0, 0), &rgba(255, 255, 255), 1.0);
+    assert!((r - 1.0).abs() < 0.01);
+    assert!((g - 1.0).abs() < 0.01);
+    assert!((b - 1.0).abs() < 0.01);
+    // Non-truecolor start values clamp to 0-1.
+    let (r, _, _) = blend_luv_rgb(&Color::NoColor, &rgba(255, 0, 0), 1.0);
+    assert!((0.0..=1.0).contains(&r));
+}

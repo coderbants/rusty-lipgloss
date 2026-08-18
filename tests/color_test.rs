@@ -208,3 +208,14 @@ fn test_color_space_conversions() {
     let c = lighten(Color::parse("#808080"), 0.0);
     assert!(matches!(c, Color::TrueColor { .. }));
 }
+
+/// Ported from upstream `is_dark_color`: luminance-based dark detection.
+#[test]
+fn test_is_dark_color() {
+    use rusty_lipgloss::color::is_dark_color;
+    use rusty_lipgloss::Color;
+    assert!(is_dark_color(&Color::parse("#000000")));
+    assert!(!is_dark_color(&Color::parse("#ffffff")));
+    assert!(is_dark_color(&Color::parse("#800000")));
+    assert!(!is_dark_color(&Color::parse("#00ffff")));
+}
