@@ -232,3 +232,79 @@ fn test_tree_filter_all() {
     let out = t.render();
     assert!(out.contains("A"));
 }
+
+/// Ported from upstream tree API: Node children/leaf accessors and Child
+/// conversions.
+#[test]
+fn test_tree_node_and_child_conversions() {
+    use rusty_lipgloss::tree::{Child, Leaf, Node, Tree};
+    let leaf = Node::leaf("v".to_string());
+    assert_eq!(leaf.value(), "v");
+    assert!(leaf.children().is_empty());
+    assert!(!leaf.hidden());
+
+    let t = Tree::new().root("R").child("A".into());
+    let node = Node::Tree(Box::new(t.clone()));
+    assert_eq!(node.children().len(), 1);
+    assert_eq!(node.value(), "R");
+
+    // Child From conversions.
+    let _: Child = "x".into();
+    let _: Child = "x".to_string().into();
+    let _: Child = t.clone().into();
+    let _: Child = Leaf::new("l".to_string()).into();
+
+    // Tree children accessor + root_value + string.
+    assert_eq!(t.children().len(), 1);
+    let t2 = Tree::root_value("RV");
+    assert_eq!(t2.value(), "RV");
+    assert_eq!(t2.string(), "RV");
+}
+
+/// Ported from upstream tree API: width, offset and string leaf children.
+#[test]
+fn test_tree_width_offset_string_children() {
+    use rusty_lipgloss::tree::{Child, Tree};
+    let t = Tree::new()
+        .root("R")
+        .width(10)
+        .child("A".into())
+        .child(Child::Leaf(rusty_lipgloss::tree::Leaf::new(
+            "B".to_string(),
+        )))
+        .child("C".to_string().into());
+    let out = t.render();
+    assert!(out.contains("A"));
+    assert!(out.contains("B"));
+    assert!(out.contains("C"));
+    // Offset(start, end) trims start children from the front and end from the
+    // back; when start > end the two are swapped (matching upstream Go).
+    let t = Tree::new()
+        .root("R")
+        .child("A".into())
+        .child("B".into())
+        .child("C".into())
+        .offset(1, 0);
+    let out = t.render();
+    assert!(
+        !out.contains("C"),
+        "offset(1,0) swaps to (0,1), trimming the last child: {out:?}"
+    );
+    assert!(out.contains("A"));
+    assert!(out.contains("B"));
+}
+
+/// Ported from upstream `TestTreeAddTwoSubTreesWithoutName`: root-less subtrees
+/// are parented to their sibling (ensure_parent Tree branch).
+#[test]
+fn test_tree_ensure_parent_tree_branch() {
+    use rusty_lipgloss::tree::Tree;
+    let t = Tree::new()
+        .child(Tree::new().child("Qux".into()).child("Quuux".into()).into())
+        .child(Tree::new().child("A".into()).child("B".into()).into());
+    let out = t.render();
+    assert!(out.contains("Qux"));
+    assert!(out.contains("Quuux"));
+    assert!(out.contains("A"));
+    assert!(out.contains("B"));
+}
