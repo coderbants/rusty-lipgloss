@@ -59,7 +59,10 @@ fn test_tree_string_leaves() {
 #[test]
 fn test_tree_children_at() {
     use rusty_lipgloss::tree::Children;
-    let data: Vec<rusty_lipgloss::tree::Node> = vec![rusty_lipgloss::tree::Node::leaf("Foo".to_string()), rusty_lipgloss::tree::Node::leaf("Bar".to_string())];
+    let data: Vec<rusty_lipgloss::tree::Node> = vec![
+        rusty_lipgloss::tree::Node::leaf("Foo".to_string()),
+        rusty_lipgloss::tree::Node::leaf("Bar".to_string()),
+    ];
     assert_eq!(
         <Vec<Node> as Children>::at(&data, 0).map(|n| n.value()),
         Some("Foo")
