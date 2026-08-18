@@ -129,3 +129,31 @@ fn test_wrap_writer_defaults() {
     }
     assert_eq!(buf, b"hello\nworld");
 }
+
+/// Ported from upstream ansi.Wrap: leading whitespace before a newline that
+/// exceeds the width is dropped (cur_width reset).
+#[test]
+fn test_wrap_newline_overflowing_whitespace() {
+    // Two spaces before the newline exceed width 1 -> dropped.
+    assert_eq!(wrap("  \n", 1, ""), "\n");
+    // Spaces fit within width -> preserved.
+    assert_eq!(wrap("  \n", 5, ""), "  \n");
+    // Trailing whitespace after the last word overflowing width.
+    assert_eq!(wrap("a  ", 1, ""), "a");
+    assert_eq!(wrap("a  ", 5, ""), "a  ");
+    // A newline at the start preserves any leading whitespace when it fits.
+    assert_eq!(wrap(" \na", 5, ""), " \na");
+}
+
+/// Ported from upstream ansi.Wrap: OSC terminated by ST (ESC \) and a bare
+/// trailing ESC.
+#[test]
+fn test_wrap_st_terminated_osc_and_bare_esc() {
+    // OSC ends with ST (0x1b 0x5c) instead of BEL.
+    let s = "\x1b]8;;http://example.com\x1b\\link\x1b]8;;\x1b\\";
+    let out = wrap(s, 10, "");
+    assert!(out.contains("link"), "got: {out:?}");
+    // A bare trailing escape byte is preserved.
+    let out = wrap("abc\x1b", 5, "");
+    assert_eq!(out, "abc\x1b");
+}

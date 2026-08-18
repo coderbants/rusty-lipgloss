@@ -1250,3 +1250,30 @@ fn test_render_space_styler_background() {
         .render("a b");
     assert!(out.contains("48;2;255;0;0;4"));
 }
+
+/// Ported from upstream GetAlign/GetAlignHorizontal/GetAlignVertical.
+#[test]
+fn test_get_align_functions() {
+    use rusty_lipgloss::align::RIGHT;
+    // Default align -> LEFT.
+    let s = Style::new();
+    assert_eq!(s.get_align(), rusty_lipgloss::LEFT);
+    assert_eq!(s.get_align_horizontal(), rusty_lipgloss::LEFT);
+    assert_eq!(s.get_align_vertical(), rusty_lipgloss::TOP);
+    // Set horizontal -> RIGHT (non-zero).
+    let s = Style::new().align_horizontal(RIGHT);
+    assert_eq!(s.get_align(), RIGHT);
+    assert_eq!(s.get_align_horizontal(), RIGHT);
+    // Set vertical -> CENTER.
+    let s = Style::new().align_vertical(rusty_lipgloss::CENTER);
+    assert_eq!(s.get_align_vertical(), rusty_lipgloss::CENTER);
+}
+
+/// Ported from upstream: border foreground blend offset getter.
+#[test]
+fn test_get_border_blend_offset() {
+    let s = Style::new().border_foreground_blend_offset(3);
+    assert_eq!(s.get_border_foreground_blend_offset(), 3);
+    let s = Style::new();
+    assert_eq!(s.get_border_foreground_blend_offset(), 0);
+}
