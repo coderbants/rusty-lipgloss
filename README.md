@@ -1,8 +1,8 @@
 <p align="center">
-    <a href="rusty-lipgloss.png"><img src="rusty-lipgloss.png" width="313" alt="Rusty Lip Gloss"></a><br>
+    <a href="https://raw.githubusercontent.com/coderbants/rusty-lipgloss/dev/rusty-lipgloss.png"><img src="https://raw.githubusercontent.com/coderbants/rusty-lipgloss/dev/rusty-lipgloss.png" width="313" alt="Rusty Lip Gloss"></a><br>
     <a href="https://crates.io/crates/rusty-lipgloss"><img src="https://img.shields.io/crates/v/rusty-lipgloss.svg" alt="crates.io"></a>
     <a href="https://github.com/coderbants/rusty-lipgloss/actions"><img src="https://github.com/coderbants/rusty-lipgloss/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
-    <a href="coverage.svg"><img src="coverage.svg" alt="coverage"></a>
+    <a href="https://raw.githubusercontent.com/coderbants/rusty-lipgloss/dev/coverage.svg"><img src="https://raw.githubusercontent.com/coderbants/rusty-lipgloss/dev/coverage.svg" alt="coverage"></a>
 
 </p>
 
