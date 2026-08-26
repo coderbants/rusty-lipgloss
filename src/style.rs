@@ -1,16 +1,26 @@
 //! Cleanroom Rust port of upstream Go source files: `style.go`, `set.go`, `get.go`, `unset.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 //!
-//! <public-docs>
+//! <user-docs>
 //! A fluent style builder and rendering pipeline matching upstream
 //! `lipgloss.Style`: text attributes, colors, width/height, alignment, padding,
 //! margins, borders, wrapping, truncation, hyperlinks, and transforms.
-//! </public-docs>
+//!
+//! Use [`Style::render`] for full-fidelity ANSI output or
+//! [`Style::render_with_profile`] when the terminal capability is known. The
+//! profile-aware operation applies deterministic color fallback while keeping
+//! layout and text content unchanged.
+//! </user-docs>
+//!
+//! Internal maintainer note: style construction and layout remain independent
+//! of the process environment. Profile projection is performed only at final
+//! materialization and delegates all SGR fallback decisions to `writer`.
 
 use crate::align::{align_text_horizontal, align_text_vertical, get_lines, Position, TOP};
 use crate::ansi::{self, Underline};
 use crate::border::{self, Border};
-use crate::color::Color;
+use crate::color::{Color, Profile};
+use crate::writer::downsample_sgr;
 
 /// <upstream-comment>NBSP is the non-breaking space rune.</upstream-comment>
 pub const NBSP: char = '\u{00A0}';
@@ -184,6 +194,33 @@ impl Style {
     /// Renders the underlying string value.
     pub fn string(&self) -> String {
         self.render("")
+    }
+
+    /// Renders the style and projects its ANSI output to an explicit terminal
+    /// color profile.
+    ///
+    /// This operation does not inspect process environment. `Profile::TrueColor`
+    /// preserves the full ANSI output, `Profile::Ansi256` and `Profile::Ansi`
+    /// deterministically downsample colors, `Profile::Ascii` removes colors
+    /// while retaining supported text attributes, and `Profile::NoTty` strips
+    /// ANSI sequences entirely. Text, layout, and ordering are otherwise
+    /// unchanged.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rusty_lipgloss::{Profile, Style};
+    ///
+    /// let rendered = Style::new()
+    ///     .bold(true)
+    ///     .foreground("#ff0000")
+    ///     .render_with_profile("hello", Profile::Ansi256);
+    ///
+    /// assert_eq!(rendered, "\x1b[1;38;5;196mhello\x1b[m");
+    /// ```
+    pub fn render_with_profile(&self, strs: &str, profile: Profile) -> String {
+        let rendered = self.render(strs);
+        downsample_sgr(&rendered, profile)
     }
 
     /// <upstream-comment>Inherit overlays the style in the argument onto this style by copying each explicitly

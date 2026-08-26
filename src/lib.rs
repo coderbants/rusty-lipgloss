@@ -1,14 +1,18 @@
 //! Cleanroom Rust port of upstream Go source file: `lipgloss.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 //!
-//! <public-docs>
+//! <user-docs>
 //! A cleanroom Rust port of Charmbracelet's upstream Go `lipgloss` library
 //! (pinned to release `v2.0.5`).
 //!
 //! Provides style declarations, ANSI 16/256/TrueColor support, layout alignment,
 //! string joining, borders, tables, trees, lists, color blending, canvas
-//! composition, and terminal writers.
-//! </public-docs>
+//! composition, terminal writers, and explicit profile-aware style materialization.
+//! </user-docs>
+//!
+//! Internal maintainer note: this root module is the public facade. Keep new
+//! public types re-exported here when downstream consumers should not depend on
+//! defining submodules.
 
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
@@ -38,7 +42,8 @@ pub mod writer;
 
 pub use align::{Position, BOTTOM, CENTER, LEFT, RIGHT, TOP};
 pub use border::Border;
-pub use color::{Color, NoColor};
+/// The closed terminal color capability used by profile-aware rendering.
+pub use color::{Color, NoColor, Profile};
 pub use style::Style;
 
 /// The `Align` type is an alias for `Position`.
