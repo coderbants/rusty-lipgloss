@@ -5,6 +5,7 @@ use rusty_lipgloss::ansi::Underline;
 use rusty_lipgloss::border::Border;
 use rusty_lipgloss::size;
 use rusty_lipgloss::style::Style;
+use rusty_lipgloss::Profile;
 
 #[test]
 fn test_style_render_bold() {
@@ -20,6 +21,34 @@ fn test_style_render_fg_bg() {
     assert!(rendered.contains("48;2;0;0;0"));
     assert!(rendered.starts_with("\x1b["));
     assert!(rendered.ends_with("\x1b[m"));
+}
+
+#[test]
+fn test_style_render_with_profile_fallbacks() {
+    let s = Style::new().bold(true).foreground("#ff0000");
+
+    assert_eq!(
+        s.render_with_profile("hello", Profile::TrueColor),
+        "\x1b[1;38;2;255;0;0mhello\x1b[m"
+    );
+    assert_eq!(
+        s.render_with_profile("hello", Profile::Ansi256),
+        "\x1b[1;38;5;196mhello\x1b[m"
+    );
+    assert_eq!(
+        s.render_with_profile("hello", Profile::Ansi),
+        "\x1b[1;91mhello\x1b[m"
+    );
+    assert_eq!(
+        s.render_with_profile("hello", Profile::Ascii),
+        "\x1b[1mhello\x1b[m"
+    );
+    assert_eq!(s.render_with_profile("hello", Profile::NoTty), "hello");
+
+    assert_eq!(
+        s.render_with_profile("hello", Profile::Ansi256),
+        s.render_with_profile("hello", Profile::Ansi256)
+    );
 }
 
 #[test]

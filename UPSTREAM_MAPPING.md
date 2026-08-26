@@ -9,7 +9,7 @@ This mapping accounts for **every** file in the upstream repository (source, tes
 | Upstream Go File | Rust Equivalent / Status | Notes / Description |
 | :--- | :--- | :--- |
 | `lipgloss.go` | `src/lib.rs` | Package doc; module facade and re-exports |
-| `style.go` | `src/style.rs` | Style struct, `Render` pipeline, padding, margins, hyperlinks, transforms |
+| `style.go` | `src/style.rs` | Style struct, `Render` pipeline, padding, margins, hyperlinks, transforms; profile-aware materialization is a Rust extension that delegates SGR fallback to `src/writer.rs` |
 | `set.go` | `src/style.rs` | All style setters (Bold, Italic, Padding, Margin, Border, Width, Height, etc.) |
 | `get.go` | `src/style.rs` | All style getters (GetBold, GetPadding, GetBorderSizes, GetFrameSize, etc.) |
 | `unset.go` | `src/style.rs` | All style unsetters (UnsetBold, UnsetPadding, UnsetBorderForeground, etc.) |
@@ -30,7 +30,7 @@ This mapping accounts for **every** file in the upstream repository (source, tes
 | `query.go` | `src/query.rs` | `background_color`, `has_dark_background` (OSC 11 query + env fallback) |
 | `terminal.go` | `src/query.rs` | `query_background_color` / `query_terminal` internal helpers |
 | `ansi_unix.go` | `src/platform.rs` | `enable_legacy_windows_ansi` no-op on Unix |
-| `ansi_windows.go` | `src/platform.rs` | `enable_legacy_windows_ansi` (Win32 console VT mode) |
+| `ansi_windows.go` | `src/platform.rs` | `enable_legacy_windows_ansi` (safe no-op; native Win32 console VT mode remains deferred while the crate denies unsafe Rust) |
 
 ## Sub-package `compat`
 
