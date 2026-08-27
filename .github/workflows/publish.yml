@@ -4,17 +4,20 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  publish:
-    name: Publish Crate
+  validate:
+    name: Validate release candidate
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
       - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0
         with:
           toolchain: 1.98.0
@@ -39,11 +42,11 @@ jobs:
         run: scripts/test-cargo-env.sh
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
         with:
-          go-version: 'stable'
+          go-version: '1.25.0'
       - name: Fetch upstream Go source (pinned)
         run: |
           git clone --quiet https://github.com/charmbracelet/lipgloss.git upstream-go
-          cd upstream-go && git checkout --quiet v2.0.5
+          git -C upstream-go checkout --quiet 5bd778d050f0a5a130e7cf041917927496dbe722
       - name: Test mapping verifier contract
         run: scripts/verify_mapping_test.sh
       - name: Verify upstream mapping
@@ -53,36 +56,42 @@ jobs:
         with:
           repository: coderbants/rusty-bubbletea
           path: siblings/rusty-bubbletea
+          persist-credentials: false
           ref: e52c130025cd28e00595b1302e61142d373cec22
       - name: Fetch sibling rusty-bubbles (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-bubbles
           path: siblings/rusty-bubbles
+          persist-credentials: false
           ref: 2a88f46cb8179388adb1951adb0f4fdbdcd633c0
       - name: Fetch sibling rusty-colorprofile (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-colorprofile
           path: siblings/rusty-colorprofile
+          persist-credentials: false
           ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
       - name: Fetch sibling rusty-testkit (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-testkit
           path: siblings/rusty-testkit
+          persist-credentials: false
           ref: 95aea2b636f6d479c757bb33957bb25a734a09fb
       - name: Fetch sibling rusty-ultraviolet (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-ultraviolet
           path: siblings/rusty-ultraviolet
+          persist-credentials: false
           ref: 6b9fb160a08f9291f63a82c568bf576079713246
       - name: Fetch sibling rusty-x-ansi (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-x-ansi
           path: siblings/rusty-x-ansi
+          persist-credentials: false
           ref: ed192c185a23ab8faeef5a43cb37b36ce07ff77d
       - name: Place sibling crates
         run: |
@@ -107,8 +116,24 @@ jobs:
         run: ./scripts/verify_examples.sh
       - name: Verify example parity (upstream Go vs Rust)
         run: ./scripts/verify_examples.sh
+
+  publish:
+    name: Publish validated release
+    needs: validate
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0
+        with:
+          toolchain: 1.98.0
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -118,7 +143,6 @@ jobs:
             gh release create "$GITHUB_REF_NAME" --generate-notes
           fi
       - name: Upload source to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -147,7 +171,6 @@ jobs:
             # lipgloss's dependency on ultraviolet form a cycle; the full
             # gates (build, clippy, tests) already ran above.
             cargo publish --token "${CARGO_REGISTRY_TOKEN}" --no-verify --allow-dirty
-            git checkout -- Cargo.toml
           else
             echo "No CARGO_REGISTRY_TOKEN secret; skipping crates.io publish."
           fi

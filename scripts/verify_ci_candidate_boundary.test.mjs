@@ -1,19 +1,26 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { validateCandidateWorkflow } from "./verify_ci_candidate_boundary.mjs";
+import { fileURLToPath } from "node:url";
+import {
+  validateCandidateWorkflow,
+  validateReleaseWorkflow,
+} from "./verify_ci_candidate_boundary.mjs";
 
 const SHA = "a".repeat(40);
 const DIRECT = "${{ github.event.pull_request.head.sha || github.sha }}";
+const RELEASE = "${{ github.sha }}";
+const REGISTRY_TOKEN = "${{ secrets.CARGO_REGISTRY_TOKEN }}";
 
-function checkout(reference = DIRECT, options = "") {
+function checkout(reference = DIRECT, options = "          persist-credentials: false\n") {
   return `      - uses: actions/checkout@${SHA}
         with:
 ${options}          ref: ${reference}`;
 }
 
-function workflow({ gateRef = DIRECT, gateCheckout = true, actionRef = SHA, siblingRef = SHA, extra = "" } = {}) {
+function workflow({ gateRef = DIRECT, gateCheckout = true, gateOptions, actionRef = SHA, siblingRef = SHA, extra = "" } = {}) {
   const gate = gateCheckout
-    ? checkout(gateRef)
+    ? checkout(gateRef, gateOptions)
     : `      - name: No candidate checkout
         run: true`;
   const sibling = siblingRef === null ? "" : `\n          ref: ${siblingRef}`;
@@ -32,14 +39,49 @@ ${gate}
         uses: actions/checkout@${SHA}
         with:
           repository: coderbants/rusty-colorprofile
-          path: siblings/rusty-colorprofile${sibling}
+          path: siblings/rusty-colorprofile
+          persist-credentials: false${sibling}
   windows-safe-fallback:
     steps:
 ${checkout()}
   coverage:
     steps:
-${checkout(DIRECT, "          persist-credentials: false\n")}
+${checkout()}
 ${extra}`;
+}
+
+function releaseWorkflow({
+  dispatch = false,
+  upstreamRef = "5bd778d050f0a5a130e7cf041917927496dbe722",
+  validateOptions,
+} = {}) {
+  return `name: Publish
+on:
+  push:
+    tags:
+      - 'v*'
+${dispatch ? "  workflow_dispatch:\n" : ""}permissions:
+  contents: read
+jobs:
+  validate:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+${checkout(RELEASE, validateOptions)}
+      - uses: actions/setup-go@${SHA}
+        with:
+          go-version: '1.25.0'
+      - run: git -C upstream-go checkout --quiet ${upstreamRef}
+  publish:
+    needs: validate
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    environment: crates-io
+    steps:
+${checkout(RELEASE)}
+      - run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${REGISTRY_TOKEN}`;
 }
 
 test("accepts job-scoped direct heads with immutable actions and read-only coverage", () => {
@@ -74,4 +116,46 @@ test("rejects an external sibling checkout with no ref", () => {
     () => validateCandidateWorkflow(workflow({ siblingRef: null })),
     /rusty-colorprofile checkout must declare exactly one immutable full commit SHA ref/u,
   );
+});
+
+test("rejects a candidate checkout that persists its credential", () => {
+  assert.throws(
+    () => validateCandidateWorkflow(workflow({ gateOptions: "" })),
+    /gate must disable persisted credentials on every checkout/u,
+  );
+});
+
+test("accepts an exact-tag release with isolated publication authority", () => {
+  validateReleaseWorkflow(releaseWorkflow());
+});
+
+test("rejects manual release dispatch", () => {
+  assert.throws(
+    () => validateReleaseWorkflow(releaseWorkflow({ dispatch: true })),
+    /release publication must not accept manual dispatch/u,
+  );
+});
+
+test("rejects persisted credentials during release validation", () => {
+  assert.throws(
+    () => validateReleaseWorkflow(releaseWorkflow({ validateOptions: "" })),
+    /release validation must disable persisted credentials on every checkout/u,
+  );
+});
+
+test("rejects a mutable upstream release reference", () => {
+  assert.throws(
+    () => validateReleaseWorkflow(releaseWorkflow({ upstreamRef: "v2.0.5" })),
+    /release validation must pin the upstream toolchain and source commit/u,
+  );
+});
+
+test("release version validation rejects a non-tag invocation", () => {
+  const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
+  const result = spawnSync("bash", ["scripts/verify_upstream_version.sh", "dev"], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /is not an immutable v\* tag/u);
 });

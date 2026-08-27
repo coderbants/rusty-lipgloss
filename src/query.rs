@@ -1,19 +1,22 @@
 //! Cleanroom Rust port of upstream Go source files: `query.go` and `terminal.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 //!
-//! <public-docs>
+//! <user-docs>
 //! Terminal background color detection. Like upstream, the OSC 11 query runs
 //! with the input in raw mode (to avoid echoing the response), and
 //! `has_dark_background` defaults to `true` (dark) whenever detection fails or
 //! the input/output is not a terminal.
-//! </public-docs>
+//! </user-docs>
 
-// Raw-mode terminal I/O (termios) is inherently unsafe; this module isolates
-// the unsafe FFI calls required to query the terminal without echoing.
-#![allow(unsafe_code)]
-
-use std::io::{Read, Write};
+use std::io::{IsTerminal, Read, Write};
 use std::time::Duration;
+
+#[cfg(unix)]
+use nix::poll::{poll, PollFd, PollFlags, PollTimeout};
+#[cfg(unix)]
+use nix::sys::termios::{cfmakeraw, tcgetattr, tcsetattr, SetArg, Termios};
+#[cfg(unix)]
+use std::os::fd::AsFd;
 
 use crate::color::{is_dark_color, Color};
 
@@ -30,8 +33,7 @@ pub fn background_color(_in: &mut dyn Read, out: &mut dyn Write) -> Option<Color
     {
         // Write the OSC 11 background color query plus a device attributes
         // request, then read the response with raw mode enabled on stdin.
-        let fd = std::io::stdin().as_raw_fd_checked()?;
-        let mut raw = RawMode::enter(fd)?;
+        let mut raw = RawMode::enter()?;
         let query = "\x1b]11;?\x07\x1b[c";
         if out.write_all(query.as_bytes()).is_err() {
             let _ = raw.restore();
@@ -48,8 +50,7 @@ pub fn background_color(_in: &mut dyn Read, out: &mut dyn Write) -> Option<Color
             if remaining.is_zero() {
                 break;
             }
-            let ms = remaining.as_millis().min(200) as i32;
-            if !raw.poll_read(ms) {
+            if !raw.poll_read(remaining.min(Duration::from_millis(200))) {
                 continue;
             }
             match _in.read(&mut buf) {
@@ -109,79 +110,64 @@ pub fn has_dark_background() -> bool {
     }
 }
 
-#[cfg(unix)]
 fn stdin_is_tty() -> bool {
-    use std::os::unix::io::AsRawFd;
-    unsafe { libc::isatty(std::io::stdin().as_raw_fd()) == 1 }
+    std::io::stdin().is_terminal()
 }
 
-#[cfg(unix)]
 fn stdout_is_tty() -> bool {
-    use std::os::unix::io::AsRawFd;
-    unsafe { libc::isatty(std::io::stdout().as_raw_fd()) == 1 }
-}
-
-#[cfg(not(unix))]
-fn stdin_is_tty() -> bool {
-    false
-}
-
-#[cfg(not(unix))]
-fn stdout_is_tty() -> bool {
-    false
-}
-
-#[cfg(unix)]
-trait RawFdExt {
-    fn as_raw_fd_checked(&self) -> Option<i32>;
-}
-
-#[cfg(unix)]
-impl RawFdExt for std::io::Stdin {
-    fn as_raw_fd_checked(&self) -> Option<i32> {
-        use std::os::unix::io::AsRawFd;
-        Some(self.as_raw_fd())
-    }
+    std::io::stdout().is_terminal()
 }
 
 /// A raw-mode guard for the terminal input used during queries.
 #[cfg(unix)]
 struct RawMode {
-    fd: i32,
-    original: libc::termios,
+    stdin: std::io::Stdin,
+    original: Termios,
+    restored: bool,
 }
 
 #[cfg(unix)]
 impl RawMode {
-    fn enter(fd: i32) -> Option<RawMode> {
-        unsafe {
-            let mut original: libc::termios = std::mem::zeroed();
-            if libc::tcgetattr(fd, &mut original) != 0 {
-                return None;
-            }
-            let mut raw = original;
-            libc::cfmakeraw(&mut raw);
-            if libc::tcsetattr(fd, libc::TCSANOW, &raw) != 0 {
-                return None;
-            }
-            Some(RawMode { fd, original })
+    fn enter() -> Option<RawMode> {
+        let stdin = std::io::stdin();
+        let original = tcgetattr(&stdin).ok()?;
+        let mut raw = original.clone();
+        cfmakeraw(&mut raw);
+        tcsetattr(&stdin, SetArg::TCSANOW, &raw).ok()?;
+        Some(RawMode {
+            stdin,
+            original,
+            restored: false,
+        })
+    }
+
+    fn restore(&mut self) -> bool {
+        if self.restored {
+            return true;
         }
+        self.restored = tcsetattr(&self.stdin, SetArg::TCSANOW, &self.original).is_ok();
+        self.restored
     }
 
-    fn restore(&mut self) -> i32 {
-        unsafe { libc::tcsetattr(self.fd, libc::TCSANOW, &self.original) }
+    /// Polls the input for readability until `timeout` elapses.
+    fn poll_read(&mut self, timeout: Duration) -> bool {
+        let mut fds = [PollFd::new(self.stdin.as_fd(), PollFlags::POLLIN)];
+        let Ok(timeout) = PollTimeout::try_from(timeout) else {
+            return false;
+        };
+        poll(&mut fds, timeout).is_ok_and(|ready| {
+            ready > 0
+                && fds[0]
+                    .revents()
+                    .is_some_and(|events| events.contains(PollFlags::POLLIN))
+        })
     }
+}
 
-    /// Polls the input fd for readability, returning after at most `ms`
-    /// milliseconds. Returns true if data is available.
-    fn poll_read(&mut self, ms: i32) -> bool {
-        let mut fds = [libc::pollfd {
-            fd: self.fd,
-            events: libc::POLLIN,
-            revents: 0,
-        }];
-        let ret = unsafe { libc::poll(fds.as_mut_ptr(), 1, ms) };
-        ret > 0 && fds[0].revents & libc::POLLIN != 0
+#[cfg(unix)]
+impl Drop for RawMode {
+    fn drop(&mut self) {
+        let _ = self.restore();
     }
 }
 
@@ -229,6 +215,12 @@ fn parse_os11_response(s: &str) -> Option<Color> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_terminal_detection_uses_safe_standard_io_contracts() {
+        let _stdin = stdin_is_tty();
+        let _stdout = stdout_is_tty();
+    }
 
     #[test]
     fn test_parse_os11_response() {
