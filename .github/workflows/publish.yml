@@ -133,6 +133,34 @@ jobs:
       - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0
         with:
           toolchain: 1.98.0
+      - name: Fetch sibling rusty-colorprofile (pinned)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: coderbants/rusty-colorprofile
+          path: siblings/rusty-colorprofile
+          persist-credentials: false
+          ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
+      - name: Fetch sibling rusty-ultraviolet (pinned)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: coderbants/rusty-ultraviolet
+          path: siblings/rusty-ultraviolet
+          persist-credentials: false
+          ref: 6b9fb160a08f9291f63a82c568bf576079713246
+      - name: Fetch sibling rusty-x-ansi (pinned)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: coderbants/rusty-x-ansi
+          path: siblings/rusty-x-ansi
+          persist-credentials: false
+          ref: ed192c185a23ab8faeef5a43cb37b36ce07ff77d
+      - name: Place publication dependencies
+        run: |
+          mv siblings/rusty-colorprofile ../rusty-colorprofile
+          mv siblings/rusty-ultraviolet ../rusty-ultraviolet
+          mv siblings/rusty-x-ansi ../rusty-x-ansi
+      - name: Validate isolated publication package
+        run: cargo package --allow-dirty --no-verify
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
