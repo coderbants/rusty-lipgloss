@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
+          persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Verify version matches upstream
         run: scripts/verify_upstream_version.sh
@@ -33,6 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
+          persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0
         with:
@@ -61,11 +63,11 @@ jobs:
         run: scripts/test-cargo-env.sh
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
         with:
-          go-version: 'stable'
+          go-version: '1.25.0'
       - name: Fetch upstream Go source (pinned)
         run: |
           git clone --quiet https://github.com/charmbracelet/lipgloss.git upstream-go
-          cd upstream-go && git checkout --quiet v2.0.5
+          git -C upstream-go checkout --quiet 5bd778d050f0a5a130e7cf041917927496dbe722
       - name: Test mapping verifier contract
         run: scripts/verify_mapping_test.sh
       - name: Verify upstream mapping
@@ -75,36 +77,42 @@ jobs:
         with:
           repository: coderbants/rusty-bubbletea
           path: siblings/rusty-bubbletea
+          persist-credentials: false
           ref: e52c130025cd28e00595b1302e61142d373cec22
       - name: Fetch sibling rusty-bubbles (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-bubbles
           path: siblings/rusty-bubbles
+          persist-credentials: false
           ref: 2a88f46cb8179388adb1951adb0f4fdbdcd633c0
       - name: Fetch sibling rusty-colorprofile (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-colorprofile
           path: siblings/rusty-colorprofile
+          persist-credentials: false
           ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
       - name: Fetch sibling rusty-testkit (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-testkit
           path: siblings/rusty-testkit
+          persist-credentials: false
           ref: 95aea2b636f6d479c757bb33957bb25a734a09fb
       - name: Fetch sibling rusty-ultraviolet (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-ultraviolet
           path: siblings/rusty-ultraviolet
+          persist-credentials: false
           ref: 6b9fb160a08f9291f63a82c568bf576079713246
       - name: Fetch sibling rusty-x-ansi (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-x-ansi
           path: siblings/rusty-x-ansi
+          persist-credentials: false
           ref: ed192c185a23ab8faeef5a43cb37b36ce07ff77d
       - name: Place sibling crates
         run: |
@@ -135,6 +143,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
+          persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0
         with:
@@ -144,12 +153,14 @@ jobs:
         with:
           repository: coderbants/rusty-colorprofile
           path: siblings/rusty-colorprofile
+          persist-credentials: false
           ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
       - name: Fetch sibling rusty-ultraviolet
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-ultraviolet
           path: siblings/rusty-ultraviolet
+          persist-credentials: false
           # Exact compile-safe Windows dependency candidate from PR #3.
           ref: 6b9fb160a08f9291f63a82c568bf576079713246
       - name: Fetch sibling rusty-x-ansi
@@ -157,6 +168,7 @@ jobs:
         with:
           repository: coderbants/rusty-x-ansi
           path: siblings/rusty-x-ansi
+          persist-credentials: false
           ref: ed192c185a23ab8faeef5a43cb37b36ce07ff77d
       - name: Place sibling crates
         run: |
@@ -197,36 +209,42 @@ jobs:
         with:
           repository: coderbants/rusty-bubbletea
           path: siblings/rusty-bubbletea
+          persist-credentials: false
           ref: e52c130025cd28e00595b1302e61142d373cec22
       - name: Fetch sibling rusty-bubbles (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-bubbles
           path: siblings/rusty-bubbles
+          persist-credentials: false
           ref: 2a88f46cb8179388adb1951adb0f4fdbdcd633c0
       - name: Fetch sibling rusty-colorprofile (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-colorprofile
           path: siblings/rusty-colorprofile
+          persist-credentials: false
           ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
       - name: Fetch sibling rusty-testkit (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-testkit
           path: siblings/rusty-testkit
+          persist-credentials: false
           ref: 95aea2b636f6d479c757bb33957bb25a734a09fb
       - name: Fetch sibling rusty-ultraviolet (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-ultraviolet
           path: siblings/rusty-ultraviolet
+          persist-credentials: false
           ref: 6b9fb160a08f9291f63a82c568bf576079713246
       - name: Fetch sibling rusty-x-ansi (pinned)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-x-ansi
           path: siblings/rusty-x-ansi
+          persist-credentials: false
           ref: ed192c185a23ab8faeef5a43cb37b36ce07ff77d
       - name: Place sibling crates
         run: |

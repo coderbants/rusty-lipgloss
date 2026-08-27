@@ -16,7 +16,9 @@ rusty-ultraviolet = { version = "0.0.0-20260703014108-f5a850f9c2b7", path = "../
 rusty-x-ansi = { version = "0.11.7", path = "../rusty-x-ansi" }
 unicode-segmentation = "1.10.1"
 unicode-width = "0.1"
-libc = "0.2"
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.30.1", features = ["poll", "term"] }
 
 [dev-dependencies]
 

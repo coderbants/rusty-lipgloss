@@ -1,7 +1,7 @@
 //! Cleanroom Rust port of upstream Go source file: `writer.go`
 //! Upstream Target Tag / Version: `v2.0.5`
 //!
-//! <public-docs>
+//! <user-docs>
 //! Print functions that write to stdout/stderr, automatically downsampling
 //! colors when necessary based on the detected terminal color profile.
 //!
@@ -10,13 +10,10 @@
 //! ANSI sequences (NoTTY), NO_COLOR disables colors but keeps text decoration,
 //! and ANSI/ANSI256 profiles re-encode SGR colors using the xterm-256 palette
 //! with the tmux cube + HSLuv-distance algorithm.
-//! </public-docs>
-
-// The TTY check uses a libc FFI call; the unsafe code is isolated here.
-#![allow(unsafe_code)]
+//! </user-docs>
 
 use std::collections::HashMap;
-use std::io::Write;
+use std::io::{IsTerminal, Write};
 
 use crate::color::{Color, Profile};
 
@@ -142,15 +139,7 @@ fn color_term(env: &HashMap<String, String>) -> bool {
 
 /// Returns whether the given output file descriptor is a terminal.
 pub fn stdout_is_tty() -> bool {
-    #[cfg(unix)]
-    {
-        use std::os::unix::io::AsRawFd;
-        unsafe { libc::isatty(std::io::stdout().as_raw_fd()) == 1 }
-    }
-    #[cfg(not(unix))]
-    {
-        false
-    }
+    std::io::stdout().is_terminal()
 }
 
 /// The writer that prints to stdout, automatically downsampling colors when

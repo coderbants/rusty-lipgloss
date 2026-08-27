@@ -14,7 +14,7 @@
 //! public types re-exported here when downstream consumers should not depend on
 //! defining submodules.
 
-#![deny(unsafe_code)]
+#![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
 pub mod align;
