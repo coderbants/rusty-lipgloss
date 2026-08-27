@@ -123,6 +123,8 @@ jobs:
           mv siblings/rusty-testkit ../rusty-testkit
           mv siblings/rusty-ultraviolet ../rusty-ultraviolet
           mv siblings/rusty-x-ansi ../rusty-x-ansi
+      - name: Validate isolated publication package
+        run: cargo package --allow-dirty --no-verify
       - name: Format
         run: cargo fmt --all --check
       - name: Lint

@@ -15,6 +15,11 @@ const RELEASE_HEAD_REF = "ref: ${{ github.sha }}";
 const RELEASE_IF = "if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')";
 const UPSTREAM_COMMIT = "5bd778d050f0a5a130e7cf041917927496dbe722";
 const CANDIDATE_JOBS = ["version-bump", "gate", "windows-safe-fallback", "coverage"];
+const PUBLICATION_SIBLINGS = [
+  "coderbants/rusty-colorprofile",
+  "coderbants/rusty-ultraviolet",
+  "coderbants/rusty-x-ansi",
+];
 const SHA = /^[a-f0-9]{40}$/u;
 
 function jobBlocks(workflow) {
@@ -146,6 +151,23 @@ export function validateReleaseWorkflow(workflow) {
   if (!ownCheckout(publish, "publication").includes(RELEASE_HEAD_REF)
       || checkoutBlocks(publish).some((checkout) => !checkout.includes("persist-credentials: false"))) {
     throw new Error("publication checkout must use the exact tag commit without persisted credentials");
+  }
+  const publicationSiblings = siblingCheckouts(publish);
+  const publicationRepositories = publicationSiblings.map((sibling) => sibling.repository).sort();
+  if (JSON.stringify(publicationRepositories) !== JSON.stringify([...PUBLICATION_SIBLINGS].sort())) {
+    throw new Error("publication must fetch the complete normal dependency closure");
+  }
+  for (const sibling of publicationSiblings) {
+    if (sibling.refs.length !== 1 || !SHA.test(sibling.refs[0])) {
+      throw new Error(`${sibling.repository} publication checkout must use one immutable full commit SHA`);
+    }
+  }
+  const packageCheck = publish.indexOf("cargo package --allow-dirty --no-verify");
+  const firstMutation = Math.min(
+    ...[publish.indexOf("gh release"), publish.indexOf("cargo publish")].filter((index) => index >= 0),
+  );
+  if (packageCheck < 0 || packageCheck > firstMutation) {
+    throw new Error("publication must prove isolated packaging before release mutation");
   }
   if (!publish.includes("cargo publish") || !publish.includes("secrets.CARGO_REGISTRY_TOKEN")) {
     throw new Error("publication job must own the registry mutation explicitly");

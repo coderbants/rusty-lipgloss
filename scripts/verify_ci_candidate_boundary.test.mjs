@@ -18,6 +18,16 @@ function checkout(reference = DIRECT, options = "          persist-credentials: 
 ${options}          ref: ${reference}`;
 }
 
+function siblingCheckout(repository) {
+  const name = repository.split("/").at(-1);
+  return `      - uses: actions/checkout@${SHA}
+        with:
+          repository: ${repository}
+          path: siblings/${name}
+          persist-credentials: false
+          ref: ${SHA}`;
+}
+
 function workflow({ gateRef = DIRECT, gateCheckout = true, gateOptions, actionRef = SHA, siblingRef = SHA, extra = "" } = {}) {
   const gate = gateCheckout
     ? checkout(gateRef, gateOptions)
@@ -54,7 +64,15 @@ function releaseWorkflow({
   dispatch = false,
   upstreamRef = "5bd778d050f0a5a130e7cf041917927496dbe722",
   validateOptions,
+  publishSiblings = true,
 } = {}) {
+  const siblings = publishSiblings
+    ? [
+      siblingCheckout("coderbants/rusty-colorprofile"),
+      siblingCheckout("coderbants/rusty-ultraviolet"),
+      siblingCheckout("coderbants/rusty-x-ansi"),
+    ].join("\n")
+    : "";
   return `name: Publish
 on:
   push:
@@ -79,6 +97,9 @@ ${checkout(RELEASE, validateOptions)}
     environment: crates-io
     steps:
 ${checkout(RELEASE)}
+${siblings}
+      - run: cargo package --allow-dirty --no-verify
+      - run: gh release create
       - run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${REGISTRY_TOKEN}`;
@@ -140,6 +161,13 @@ test("rejects persisted credentials during release validation", () => {
   assert.throws(
     () => validateReleaseWorkflow(releaseWorkflow({ validateOptions: "" })),
     /release validation must disable persisted credentials on every checkout/u,
+  );
+});
+
+test("rejects publication without the complete path-dependency closure", () => {
+  assert.throws(
+    () => validateReleaseWorkflow(releaseWorkflow({ publishSiblings: false })),
+    /publication must fetch the complete normal dependency closure/u,
   );
 });
 
