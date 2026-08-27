@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.0
       - name: Verify version and tag match upstream
         run: scripts/verify_upstream_version.sh "$GITHUB_REF_NAME"
       - name: Configure shared Cargo cache
@@ -42,6 +42,10 @@ jobs:
         run: |
           git clone --quiet https://github.com/charmbracelet/lipgloss.git upstream-go
           cd upstream-go && git checkout --quiet v2.0.5
+      - name: Test mapping verifier contract
+        run: scripts/verify_mapping_test.sh
+      - name: Verify upstream mapping
+        run: scripts/verify_mapping.sh
       - name: Fetch sibling rusty-bubbletea (pinned)
         uses: actions/checkout@v4
         with:

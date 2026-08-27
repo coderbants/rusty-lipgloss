@@ -6,6 +6,21 @@ cd "$(dirname "$0")/.."
 MAPPING=UPSTREAM_MAPPING.md
 fail=0
 
+if ! git -C upstream-go rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "ERROR: upstream-go checkout is required for mapping verification" >&2
+  exit 1
+fi
+
+if ! upstream_files="$(git -C upstream-go ls-files)"; then
+  echo "ERROR: unable to list tracked files in upstream-go" >&2
+  exit 1
+fi
+
+if [ -z "$upstream_files" ]; then
+  echo "ERROR: upstream-go checkout has no tracked files" >&2
+  exit 1
+fi
+
 # Glob prefixes mentioned in the golden-testdata section, e.g. "TestTable*"
 # covers "TestTableANSI.golden". Also collect exact testdata words.
 read -r -a GLOB_PREFIXES <<< "$(grep -oE 'Test[A-Za-z0-9_]*\*' "$MAPPING" | tr -d '*' | tr '\n' ' ')"
@@ -57,7 +72,7 @@ while IFS= read -r f; do
       fi
       ;;
   esac
-done < <(cd upstream-go && git ls-files)
+done <<< "$upstream_files"
 
 if [ "$fail" -eq 0 ]; then
   echo "OK: every upstream file is accounted for in $MAPPING"
