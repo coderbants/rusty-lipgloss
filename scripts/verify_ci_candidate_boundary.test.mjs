@@ -65,6 +65,7 @@ function releaseWorkflow({
   upstreamRef = "5bd778d050f0a5a130e7cf041917927496dbe722",
   validateOptions,
   publishSiblings = true,
+  packageMode = "before",
 } = {}) {
   const siblings = publishSiblings
     ? [
@@ -73,6 +74,9 @@ function releaseWorkflow({
       siblingCheckout("coderbants/rusty-x-ansi"),
     ].join("\n")
     : "";
+  const packageStep = "      - run: cargo package --allow-dirty --no-verify\n";
+  const packageBefore = packageMode === "before" ? packageStep : "";
+  const packageAfter = packageMode === "after" ? packageStep : "";
   return `name: Publish
 on:
   push:
@@ -98,9 +102,8 @@ ${checkout(RELEASE, validateOptions)}
     steps:
 ${checkout(RELEASE)}
 ${siblings}
-      - run: cargo package --allow-dirty --no-verify
-      - run: gh release create
-      - run: cargo publish
+${packageBefore}      - run: gh release create
+${packageAfter}      - run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${REGISTRY_TOKEN}`;
 }
@@ -168,6 +171,20 @@ test("rejects publication without the complete path-dependency closure", () => {
   assert.throws(
     () => validateReleaseWorkflow(releaseWorkflow({ publishSiblings: false })),
     /publication must fetch the complete normal dependency closure/u,
+  );
+});
+
+test("rejects publication without an isolated package proof", () => {
+  assert.throws(
+    () => validateReleaseWorkflow(releaseWorkflow({ packageMode: "missing" })),
+    /publication must prove isolated packaging before release mutation/u,
+  );
+});
+
+test("rejects publication packaging after the first mutation", () => {
+  assert.throws(
+    () => validateReleaseWorkflow(releaseWorkflow({ packageMode: "after" })),
+    /publication must prove isolated packaging before release mutation/u,
   );
 });
 
