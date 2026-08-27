@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Verify version matches upstream
         run: scripts/verify_upstream_version.sh
   gate:
@@ -31,6 +32,8 @@ jobs:
     needs: version-bump
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@1.98.0
         with:
           components: clippy, rustfmt
@@ -67,37 +70,37 @@ jobs:
         with:
           repository: coderbants/rusty-bubbletea
           path: siblings/rusty-bubbletea
-          ref: dev
+          ref: e52c130025cd28e00595b1302e61142d373cec22
       - name: Fetch sibling rusty-bubbles (pinned)
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-bubbles
           path: siblings/rusty-bubbles
-          ref: dev
+          ref: 2a88f46cb8179388adb1951adb0f4fdbdcd633c0
       - name: Fetch sibling rusty-colorprofile (pinned)
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-colorprofile
           path: siblings/rusty-colorprofile
-          ref: dev
+          ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
       - name: Fetch sibling rusty-testkit (pinned)
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-testkit
           path: siblings/rusty-testkit
-          ref: dev
+          ref: 95aea2b636f6d479c757bb33957bb25a734a09fb
       - name: Fetch sibling rusty-ultraviolet (pinned)
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-ultraviolet
           path: siblings/rusty-ultraviolet
-          ref: dev
+          ref: 6b9fb160a08f9291f63a82c568bf576079713246
       - name: Fetch sibling rusty-x-ansi (pinned)
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-x-ansi
           path: siblings/rusty-x-ansi
-          ref: dev
+          ref: ed192c185a23ab8faeef5a43cb37b36ce07ff77d
       - name: Place sibling crates
         run: |
           mkdir -p ../siblings && true
@@ -126,13 +129,15 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@1.98.0
       - name: Fetch sibling rusty-colorprofile
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-colorprofile
           path: siblings/rusty-colorprofile
-          ref: dev
+          ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
       - name: Fetch sibling rusty-ultraviolet
         uses: actions/checkout@v4
         with:
@@ -145,7 +150,7 @@ jobs:
         with:
           repository: coderbants/rusty-x-ansi
           path: siblings/rusty-x-ansi
-          ref: dev
+          ref: ed192c185a23ab8faeef5a43cb37b36ce07ff77d
       - name: Place sibling crates
         run: |
           rm -rf ../rusty-colorprofile ../rusty-ultraviolet ../rusty-x-ansi
@@ -162,6 +167,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@1.98.0
       - name: Configure shared Cargo cache
         run: |
@@ -182,37 +189,37 @@ jobs:
         with:
           repository: coderbants/rusty-bubbletea
           path: siblings/rusty-bubbletea
-          ref: dev
+          ref: e52c130025cd28e00595b1302e61142d373cec22
       - name: Fetch sibling rusty-bubbles (pinned)
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-bubbles
           path: siblings/rusty-bubbles
-          ref: dev
+          ref: 2a88f46cb8179388adb1951adb0f4fdbdcd633c0
       - name: Fetch sibling rusty-colorprofile (pinned)
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-colorprofile
           path: siblings/rusty-colorprofile
-          ref: dev
+          ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
       - name: Fetch sibling rusty-testkit (pinned)
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-testkit
           path: siblings/rusty-testkit
-          ref: dev
+          ref: 95aea2b636f6d479c757bb33957bb25a734a09fb
       - name: Fetch sibling rusty-ultraviolet (pinned)
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-ultraviolet
           path: siblings/rusty-ultraviolet
-          ref: dev
+          ref: 6b9fb160a08f9291f63a82c568bf576079713246
       - name: Fetch sibling rusty-x-ansi (pinned)
         uses: actions/checkout@v4
         with:
           repository: coderbants/rusty-x-ansi
           path: siblings/rusty-x-ansi
-          ref: dev
+          ref: ed192c185a23ab8faeef5a43cb37b36ce07ff77d
       - name: Place sibling crates
         run: |
           mkdir -p ../siblings && true
@@ -229,6 +236,7 @@ jobs:
           cargo tarpaulin --all-features --out xml --output-dir target/tarpaulin -- --test-threads=1 2>&1 | tee /tmp/tarpaulin.log
 
       - name: Write coverage badge in place
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         run: |
           raw="$(grep -oE 'line-rate="[0-9.]+' target/tarpaulin/cobertura.xml | head -1 | grep -oE '[0-9.]+')"
           pct="$(awk -v r="$raw" 'BEGIN { printf "%.1f", r * 100 }')"
