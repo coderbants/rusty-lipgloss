@@ -31,41 +31,7 @@ const DEFAULT_QUERY_TIMEOUT: Duration = Duration::from_secs(2);
 pub fn background_color(_in: &mut dyn Read, out: &mut dyn Write) -> Option<Color> {
     #[cfg(unix)]
     {
-        // Write the OSC 11 background color query plus a device attributes
-        // request, then read the response with raw mode enabled on stdin.
-        let mut raw = RawMode::enter()?;
-        let query = "\x1b]11;?\x07\x1b[c";
-        if out.write_all(query.as_bytes()).is_err() {
-            let _ = raw.restore();
-            return None;
-        }
-        let _ = out.flush();
-
-        let mut buf = [0u8; 256];
-        let deadline = std::time::Instant::now() + DEFAULT_QUERY_TIMEOUT;
-        let mut acc = String::new();
-        let mut result = None;
-        loop {
-            let remaining = deadline.saturating_duration_since(std::time::Instant::now());
-            if remaining.is_zero() {
-                break;
-            }
-            if !raw.poll_read(remaining.min(Duration::from_millis(200))) {
-                continue;
-            }
-            match _in.read(&mut buf) {
-                Ok(0) | Err(_) => break,
-                Ok(n) => {
-                    acc.push_str(&String::from_utf8_lossy(&buf[..n]));
-                    if acc.contains('\x07') {
-                        result = parse_os11_response(&acc);
-                        break;
-                    }
-                }
-            }
-        }
-        let _ = raw.restore();
-        result
+        background_color_with_terminal(_in, out, std::io::stdin(), DEFAULT_QUERY_TIMEOUT)
     }
     #[cfg(not(unix))]
     {
@@ -73,6 +39,45 @@ pub fn background_color(_in: &mut dyn Read, out: &mut dyn Write) -> Option<Color
         // environment-based detection.
         let _ = (_in, out);
         None
+    }
+}
+
+#[cfg(unix)]
+fn background_color_with_terminal<F: AsFd>(
+    input: &mut dyn Read,
+    out: &mut dyn Write,
+    terminal: F,
+    timeout: Duration,
+) -> Option<Color> {
+    // Write the OSC 11 background color query plus a device attributes
+    // request, then read the response with raw mode enabled on the terminal.
+    let mut raw = RawMode::enter(terminal)?;
+    let query = "\x1b]11;?\x07\x1b[c";
+    if out.write_all(query.as_bytes()).is_err() {
+        return None;
+    }
+    let _ = out.flush();
+
+    let mut buf = [0u8; 256];
+    let deadline = std::time::Instant::now() + timeout;
+    let mut acc = String::new();
+    loop {
+        let remaining = deadline.saturating_duration_since(std::time::Instant::now());
+        if remaining.is_zero() {
+            return None;
+        }
+        if !raw.poll_read(remaining.min(Duration::from_millis(200))) {
+            continue;
+        }
+        match input.read(&mut buf) {
+            Ok(0) | Err(_) => return None,
+            Ok(n) => {
+                acc.push_str(&String::from_utf8_lossy(&buf[..n]));
+                if acc.contains('\x07') {
+                    return parse_os11_response(&acc);
+                }
+            }
+        }
     }
 }
 
@@ -120,22 +125,21 @@ fn stdout_is_tty() -> bool {
 
 /// A raw-mode guard for the terminal input used during queries.
 #[cfg(unix)]
-struct RawMode {
-    stdin: std::io::Stdin,
+struct RawMode<F: AsFd> {
+    terminal: F,
     original: Termios,
     restored: bool,
 }
 
 #[cfg(unix)]
-impl RawMode {
-    fn enter() -> Option<RawMode> {
-        let stdin = std::io::stdin();
-        let original = tcgetattr(&stdin).ok()?;
+impl<F: AsFd> RawMode<F> {
+    fn enter(terminal: F) -> Option<RawMode<F>> {
+        let original = tcgetattr(&terminal).ok()?;
         let mut raw = original.clone();
         cfmakeraw(&mut raw);
-        tcsetattr(&stdin, SetArg::TCSANOW, &raw).ok()?;
+        tcsetattr(&terminal, SetArg::TCSANOW, &raw).ok()?;
         Some(RawMode {
-            stdin,
+            terminal,
             original,
             restored: false,
         })
@@ -145,13 +149,13 @@ impl RawMode {
         if self.restored {
             return true;
         }
-        self.restored = tcsetattr(&self.stdin, SetArg::TCSANOW, &self.original).is_ok();
+        self.restored = tcsetattr(&self.terminal, SetArg::TCSANOW, &self.original).is_ok();
         self.restored
     }
 
     /// Polls the input for readability until `timeout` elapses.
     fn poll_read(&mut self, timeout: Duration) -> bool {
-        let mut fds = [PollFd::new(self.stdin.as_fd(), PollFlags::POLLIN)];
+        let mut fds = [PollFd::new(self.terminal.as_fd(), PollFlags::POLLIN)];
         let Ok(timeout) = PollTimeout::try_from(timeout) else {
             return false;
         };
@@ -165,7 +169,7 @@ impl RawMode {
 }
 
 #[cfg(unix)]
-impl Drop for RawMode {
+impl<F: AsFd> Drop for RawMode<F> {
     fn drop(&mut self) {
         let _ = self.restore();
     }
@@ -216,10 +220,167 @@ fn parse_os11_response(s: &str) -> Option<Color> {
 mod tests {
     use super::*;
 
+    #[cfg(unix)]
+    use nix::pty::openpty;
+    #[cfg(unix)]
+    use nix::sys::termios::LocalFlags;
+    #[cfg(unix)]
+    use nix::unistd::{dup, write};
+    #[cfg(unix)]
+    use std::fs::File;
+
+    #[cfg(unix)]
+    struct FailingReader;
+
+    #[cfg(unix)]
+    impl Read for FailingReader {
+        fn read(&mut self, _buf: &mut [u8]) -> std::io::Result<usize> {
+            Err(std::io::Error::other("controlled read failure"))
+        }
+    }
+
+    #[cfg(unix)]
+    struct FailingWriter;
+
+    #[cfg(unix)]
+    impl Write for FailingWriter {
+        fn write(&mut self, _buf: &[u8]) -> std::io::Result<usize> {
+            Err(std::io::Error::other("controlled write failure"))
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    #[cfg(unix)]
+    fn assert_terminal_restored<F: AsFd>(terminal: &F, expected: &Termios) {
+        let actual = tcgetattr(terminal).expect("restored termios must be readable");
+        let durable_local_flags = |mut flags: LocalFlags| {
+            flags.remove(LocalFlags::PENDIN);
+            flags
+        };
+        assert_eq!(actual.input_flags, expected.input_flags);
+        assert_eq!(actual.output_flags, expected.output_flags);
+        assert_eq!(actual.control_flags, expected.control_flags);
+        assert_eq!(
+            durable_local_flags(actual.local_flags),
+            durable_local_flags(expected.local_flags)
+        );
+        assert_eq!(actual.control_chars, expected.control_chars);
+    }
+
     #[test]
     fn test_terminal_detection_uses_safe_standard_io_contracts() {
         let _stdin = stdin_is_tty();
         let _stdout = stdout_is_tty();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_raw_mode_restores_explicitly_and_on_drop() {
+        let explicit_pty = openpty(None, None).expect("PTY must open for explicit restoration");
+        let explicit_inspection =
+            dup(&explicit_pty.slave).expect("slave descriptor must duplicate");
+        let explicit_original = tcgetattr(&explicit_inspection).expect("termios must be readable");
+        let mut explicit_raw = RawMode::enter(explicit_pty.slave).expect("raw mode must start");
+        assert_ne!(
+            tcgetattr(&explicit_inspection).expect("raw termios must be readable"),
+            explicit_original
+        );
+        assert!(explicit_raw.restore());
+        assert_terminal_restored(&explicit_inspection, &explicit_original);
+
+        let drop_pty = openpty(None, None).expect("PTY must open for drop restoration");
+        let drop_inspection = dup(&drop_pty.slave).expect("slave descriptor must duplicate");
+        let drop_original = tcgetattr(&drop_inspection).expect("termios must be readable");
+        let drop_raw = RawMode::enter(drop_pty.slave).expect("raw mode must start");
+        assert_ne!(
+            tcgetattr(&drop_inspection).expect("raw termios must be readable"),
+            drop_original
+        );
+        drop(drop_raw);
+        assert_terminal_restored(&drop_inspection, &drop_original);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_poll_read_covers_readable_timeout_and_invalid_timeout() {
+        let readable_pty = openpty(None, None).expect("PTY must open for readable polling");
+        let mut readable_raw = RawMode::enter(readable_pty.slave).expect("raw mode must start");
+        write(&readable_pty.master, b"x").expect("PTY master must accept input");
+        assert!(readable_raw.poll_read(Duration::from_millis(50)));
+
+        let timeout_pty = openpty(None, None).expect("PTY must open for timeout polling");
+        let mut timeout_raw = RawMode::enter(timeout_pty.slave).expect("raw mode must start");
+        assert!(!timeout_raw.poll_read(Duration::from_millis(1)));
+        assert!(!timeout_raw.poll_read(Duration::MAX));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_background_query_restores_after_success_and_failures() {
+        let success_pty = openpty(None, None).expect("PTY must open for successful query");
+        let success_inspection = dup(&success_pty.slave).expect("slave descriptor must duplicate");
+        let success_reader = dup(&success_pty.slave).expect("reader descriptor must duplicate");
+        let success_original = tcgetattr(&success_inspection).expect("termios must be readable");
+        write(&success_pty.master, b"\x1b]11;rgb:ffff/0000/0000\x07\n")
+            .expect("PTY master must accept a terminal response");
+        let mut reader = File::from(success_reader);
+        let mut output = Vec::new();
+        assert_eq!(
+            background_color_with_terminal(
+                &mut reader,
+                &mut output,
+                success_pty.slave,
+                Duration::from_millis(50),
+            ),
+            Some(Color::TrueColor { r: 255, g: 0, b: 0 })
+        );
+        assert_terminal_restored(&success_inspection, &success_original);
+
+        let write_pty = openpty(None, None).expect("PTY must open for write failure");
+        let write_inspection = dup(&write_pty.slave).expect("slave descriptor must duplicate");
+        let write_original = tcgetattr(&write_inspection).expect("termios must be readable");
+        assert_eq!(
+            background_color_with_terminal(
+                &mut std::io::empty(),
+                &mut FailingWriter,
+                write_pty.slave,
+                Duration::from_millis(10),
+            ),
+            None
+        );
+        assert_terminal_restored(&write_inspection, &write_original);
+
+        let read_pty = openpty(None, None).expect("PTY must open for read failure");
+        let read_inspection = dup(&read_pty.slave).expect("slave descriptor must duplicate");
+        let read_original = tcgetattr(&read_inspection).expect("termios must be readable");
+        write(&read_pty.master, b"x").expect("PTY master must accept input");
+        assert_eq!(
+            background_color_with_terminal(
+                &mut FailingReader,
+                &mut Vec::new(),
+                read_pty.slave,
+                Duration::from_millis(50),
+            ),
+            None
+        );
+        assert_terminal_restored(&read_inspection, &read_original);
+
+        let timeout_pty = openpty(None, None).expect("PTY must open for timeout");
+        let timeout_inspection = dup(&timeout_pty.slave).expect("slave descriptor must duplicate");
+        let timeout_original = tcgetattr(&timeout_inspection).expect("termios must be readable");
+        assert_eq!(
+            background_color_with_terminal(
+                &mut std::io::empty(),
+                &mut Vec::new(),
+                timeout_pty.slave,
+                Duration::from_millis(2),
+            ),
+            None
+        );
+        assert_terminal_restored(&timeout_inspection, &timeout_original);
     }
 
     #[test]
