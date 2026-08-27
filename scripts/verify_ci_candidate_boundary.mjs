@@ -32,6 +32,27 @@ function ownCheckout(job, name) {
   return job.slice(checkout.index, nextStep < 0 ? job.length : nextStep);
 }
 
+function siblingCheckouts(workflow) {
+  const lines = workflow.split("\n");
+  const checkouts = [];
+  for (const [index, line] of lines.entries()) {
+    const repository = /^(\s*)repository:\s+(coderbants\/[^\s]+)\s*$/u.exec(line);
+    if (repository === null) continue;
+    const indent = repository[1].length;
+    const refs = [];
+    for (let next = index + 1; next < lines.length; next += 1) {
+      const candidate = lines[next];
+      if (candidate.trim().length === 0) continue;
+      const candidateIndent = /^\s*/u.exec(candidate)[0].length;
+      if (candidateIndent < indent) break;
+      const reference = /^\s*ref:\s+([^\s#]+)/u.exec(candidate);
+      if (candidateIndent === indent && reference !== null) refs.push(reference[1]);
+    }
+    checkouts.push({ repository: repository[2], refs });
+  }
+  return checkouts;
+}
+
 /** Validate candidate CI identity, dependency immutability, and permissions. */
 export function validateCandidateWorkflow(workflow) {
   if (workflow.includes("contents: write")) {
@@ -46,10 +67,10 @@ export function validateCandidateWorkflow(workflow) {
     throw new Error("every CI action implementation must use an immutable full commit SHA");
   }
 
-  const siblingRefs = [...workflow.matchAll(/repository:\s+coderbants\/[^\n]+\n\s+path:[^\n]+\n(?:\s+#[^\n]+\n)?\s+ref:\s+([^\s]+)/gu)]
-    .map((match) => match[1]);
-  if (siblingRefs.some((reference) => !SHA.test(reference))) {
-    throw new Error("every CI sibling checkout must use an immutable full commit SHA");
+  for (const sibling of siblingCheckouts(workflow)) {
+    if (sibling.refs.length !== 1 || !SHA.test(sibling.refs[0])) {
+      throw new Error(`${sibling.repository} checkout must declare exactly one immutable full commit SHA ref`);
+    }
   }
 
   const jobs = jobBlocks(workflow);
