@@ -117,6 +117,43 @@ jobs:
         run: cargo doc --no-deps
       - name: Test (all targets, all integration tests)
         run: cargo test --all-targets
+  windows-safe-fallback:
+    name: Windows safe fallback
+    runs-on: windows-latest
+    needs: version-bump
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.98.0
+      - name: Fetch sibling rusty-colorprofile
+        uses: actions/checkout@v4
+        with:
+          repository: coderbants/rusty-colorprofile
+          path: siblings/rusty-colorprofile
+          ref: dev
+      - name: Fetch sibling rusty-ultraviolet
+        uses: actions/checkout@v4
+        with:
+          repository: coderbants/rusty-ultraviolet
+          path: siblings/rusty-ultraviolet
+          # Exact compile-safe Windows dependency candidate from PR #3.
+          ref: 6b9fb160a08f9291f63a82c568bf576079713246
+      - name: Fetch sibling rusty-x-ansi
+        uses: actions/checkout@v4
+        with:
+          repository: coderbants/rusty-x-ansi
+          path: siblings/rusty-x-ansi
+          ref: dev
+      - name: Place sibling crates
+        run: |
+          rm -rf ../rusty-colorprofile ../rusty-ultraviolet ../rusty-x-ansi
+          mv siblings/rusty-colorprofile ../rusty-colorprofile
+          mv siblings/rusty-ultraviolet ../rusty-ultraviolet
+          mv siblings/rusty-x-ansi ../rusty-x-ansi
+      - name: Exercise Windows safe fallback
+        run: cargo test --lib platform::tests::windows_ansi_entrypoint_is_safe_until_native_adapter_exists --no-fail-fast
   coverage:
     name: Coverage
     runs-on: ubuntu-latest

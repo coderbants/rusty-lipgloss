@@ -150,10 +150,9 @@ fn test_hyperlink() {
     let s = Style::new()
         .hyperlink("https://example.com", &[])
         .set_string(&["https://example.com"]);
-    assert_eq!(
-        s.render(""),
-        "\x1b]8;;https://example.com\x07https://example.com\x1b]8;;\x07"
-    );
+    let expected = "\x1b]8;;https://example.com\x07https://example.com\x1b]8;;\x07";
+    assert_eq!(s.render(""), expected);
+    assert_eq!(s.render_with_profile("", Profile::Ansi256), expected);
 }
 
 #[test]

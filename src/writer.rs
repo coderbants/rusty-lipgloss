@@ -187,8 +187,8 @@ impl<'a> Writer<'a> {
 }
 
 /// Rewrites ANSI SGR sequences in the string, downsampling colors to the given
-/// profile. Non-SGR sequences are passed through verbatim. With `NoTty` all
-/// ANSI sequences are stripped entirely.
+/// profile. Non-SGR and incomplete sequences are passed through verbatim,
+/// exactly once. With `NoTty` all ANSI sequences are stripped entirely.
 pub fn downsample_sgr(s: &str, profile: Profile) -> String {
     match profile {
         Profile::TrueColor => s.to_string(),
@@ -200,7 +200,6 @@ pub fn downsample_sgr(s: &str, profile: Profile) -> String {
                 out.push_str(&rest[..pos]);
                 rest = &rest[pos..];
                 if !rest.starts_with("\x1b[") {
-                    out.push_str(rest);
                     break;
                 }
                 // Find the terminating byte.
@@ -210,7 +209,6 @@ pub fn downsample_sgr(s: &str, profile: Profile) -> String {
                     end += 1;
                 }
                 if end >= bytes.len() {
-                    out.push_str(rest);
                     break;
                 }
                 let seq = &rest[..=end];
@@ -766,5 +764,17 @@ mod tests {
         let s = "\x1b[0m";
         let out = downsample_sgr(s, Profile::Ansi256);
         assert_eq!(out, "\x1b[m");
+    }
+
+    #[test]
+    fn test_downsample_sgr_preserves_non_csi_and_incomplete_tails_once() {
+        let hyperlink = "\x1b]8;;https://example.com\x1b\\example\x1b]8;;\x1b\\";
+        assert_eq!(downsample_sgr(hyperlink, Profile::Ansi256), hyperlink);
+
+        let incomplete_csi = "prefix\x1b[38;2;255";
+        assert_eq!(
+            downsample_sgr(incomplete_csi, Profile::Ansi256),
+            incomplete_csi
+        );
     }
 }
