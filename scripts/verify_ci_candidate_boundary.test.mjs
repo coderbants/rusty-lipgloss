@@ -11,11 +11,12 @@ function checkout(reference = DIRECT, options = "") {
 ${options}          ref: ${reference}`;
 }
 
-function workflow({ gateRef = DIRECT, gateCheckout = true, actionRef = SHA, extra = "" } = {}) {
+function workflow({ gateRef = DIRECT, gateCheckout = true, actionRef = SHA, siblingRef = SHA, extra = "" } = {}) {
   const gate = gateCheckout
     ? checkout(gateRef)
     : `      - name: No candidate checkout
         run: true`;
+  const sibling = siblingRef === null ? "" : `\n          ref: ${siblingRef}`;
   return `name: CI
 permissions:
   contents: read
@@ -27,6 +28,11 @@ ${checkout()}
     steps:
 ${gate}
       - uses: actions/setup-go@${actionRef}
+      - name: Fetch sibling
+        uses: actions/checkout@${SHA}
+        with:
+          repository: coderbants/rusty-colorprofile
+          path: siblings/rusty-colorprofile${sibling}
   windows-safe-fallback:
     steps:
 ${checkout()}
@@ -60,5 +66,12 @@ test("rejects mutable action implementations", () => {
   assert.throws(
     () => validateCandidateWorkflow(workflow({ actionRef: "v5" })),
     /every CI action implementation must use an immutable full commit SHA/u,
+  );
+});
+
+test("rejects an external sibling checkout with no ref", () => {
+  assert.throws(
+    () => validateCandidateWorkflow(workflow({ siblingRef: null })),
+    /rusty-colorprofile checkout must declare exactly one immutable full commit SHA ref/u,
   );
 });
