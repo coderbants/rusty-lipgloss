@@ -20,7 +20,7 @@ jobs:
     name: Version Change Required
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -31,14 +31,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: version-bump
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: dtolnay/rust-toolchain@1.98.0
+      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0
         with:
           components: clippy, rustfmt
+          toolchain: 1.98.0
       - name: Verify candidate CI trust boundary
-        run: node scripts/verify_ci_candidate_boundary.mjs
+        run: |
+          node --test scripts/verify_ci_candidate_boundary.test.mjs
+          node scripts/verify_ci_candidate_boundary.mjs
       - name: Configure shared Cargo cache
         run: |
           # The runner image pre-sets CARGO_HOME=$HOME/.cargo; drop the
@@ -56,7 +59,7 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: Test shared Cargo cache env
         run: scripts/test-cargo-env.sh
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
         with:
           go-version: 'stable'
       - name: Fetch upstream Go source (pinned)
@@ -68,37 +71,37 @@ jobs:
       - name: Verify upstream mapping
         run: scripts/verify_mapping.sh
       - name: Fetch sibling rusty-bubbletea (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-bubbletea
           path: siblings/rusty-bubbletea
           ref: e52c130025cd28e00595b1302e61142d373cec22
       - name: Fetch sibling rusty-bubbles (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-bubbles
           path: siblings/rusty-bubbles
           ref: 2a88f46cb8179388adb1951adb0f4fdbdcd633c0
       - name: Fetch sibling rusty-colorprofile (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-colorprofile
           path: siblings/rusty-colorprofile
           ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
       - name: Fetch sibling rusty-testkit (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-testkit
           path: siblings/rusty-testkit
           ref: 95aea2b636f6d479c757bb33957bb25a734a09fb
       - name: Fetch sibling rusty-ultraviolet (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-ultraviolet
           path: siblings/rusty-ultraviolet
           ref: 6b9fb160a08f9291f63a82c568bf576079713246
       - name: Fetch sibling rusty-x-ansi (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-x-ansi
           path: siblings/rusty-x-ansi
@@ -130,25 +133,27 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: dtolnay/rust-toolchain@1.98.0
+      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0
+        with:
+          toolchain: 1.98.0
       - name: Fetch sibling rusty-colorprofile
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-colorprofile
           path: siblings/rusty-colorprofile
           ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
       - name: Fetch sibling rusty-ultraviolet
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-ultraviolet
           path: siblings/rusty-ultraviolet
           # Exact compile-safe Windows dependency candidate from PR #3.
           ref: 6b9fb160a08f9291f63a82c568bf576079713246
       - name: Fetch sibling rusty-x-ansi
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-x-ansi
           path: siblings/rusty-x-ansi
@@ -166,11 +171,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: gate
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: dtolnay/rust-toolchain@1.98.0
+      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0
+        with:
+          toolchain: 1.98.0
       - name: Configure shared Cargo cache
         run: |
           # The runner image pre-sets CARGO_HOME=$HOME/.cargo; drop the
@@ -186,37 +193,37 @@ jobs:
             echo "CARGO_INSTALL_ROOT=$CARGO_INSTALL_ROOT"
           } >> "$GITHUB_ENV"
       - name: Fetch sibling rusty-bubbletea (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-bubbletea
           path: siblings/rusty-bubbletea
           ref: e52c130025cd28e00595b1302e61142d373cec22
       - name: Fetch sibling rusty-bubbles (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-bubbles
           path: siblings/rusty-bubbles
           ref: 2a88f46cb8179388adb1951adb0f4fdbdcd633c0
       - name: Fetch sibling rusty-colorprofile (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-colorprofile
           path: siblings/rusty-colorprofile
           ref: 9b31a0fa223fe5570bd8ba26102013459b3558cc
       - name: Fetch sibling rusty-testkit (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-testkit
           path: siblings/rusty-testkit
           ref: 95aea2b636f6d479c757bb33957bb25a734a09fb
       - name: Fetch sibling rusty-ultraviolet (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-ultraviolet
           path: siblings/rusty-ultraviolet
           ref: 6b9fb160a08f9291f63a82c568bf576079713246
       - name: Fetch sibling rusty-x-ansi (pinned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: coderbants/rusty-x-ansi
           path: siblings/rusty-x-ansi
@@ -231,7 +238,9 @@ jobs:
           mv siblings/rusty-ultraviolet ../rusty-ultraviolet
           mv siblings/rusty-x-ansi ../rusty-x-ansi
       - name: Install cargo-tarpaulin
-        uses: taiki-e/install-action@cargo-tarpaulin
+        uses: taiki-e/install-action@f4477b07cf93c50a0f6eadd003fa33cc08c4d953
+        with:
+          tool: cargo-tarpaulin
       - name: Generate code coverage
         run: |
           cargo tarpaulin --all-features --out xml --output-dir target/tarpaulin -- --test-threads=1 2>&1 | tee /tmp/tarpaulin.log

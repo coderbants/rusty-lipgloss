@@ -39,6 +39,22 @@ if bash "$test_root/invalid/scripts/verify_mapping.sh"; then
   exit 1
 fi
 
+prepare_fixture empty
+mkdir -p "$test_root/empty/upstream-go"
+git -C "$test_root/empty/upstream-go" init --quiet
+empty_output=""
+if empty_output="$(bash "$test_root/empty/scripts/verify_mapping.sh" 2>&1)"; then
+  echo "ERROR: empty upstream checkout was accepted" >&2
+  exit 1
+fi
+case "$empty_output" in
+  *"upstream-go checkout has no tracked files"*) ;;
+  *)
+    echo "ERROR: empty upstream checkout failed for an unexpected reason" >&2
+    exit 1
+    ;;
+esac
+
 prepare_fixture valid
 mkdir -p "$test_root/valid/upstream-go"
 git -C "$test_root/valid/upstream-go" init --quiet
@@ -59,4 +75,4 @@ git -C "$test_root/worktree-source" worktree add \
   --quiet --detach "$test_root/worktree/upstream-go" HEAD
 bash "$test_root/worktree/scripts/verify_mapping.sh"
 
-echo "OK: mapping verifier rejects invalid checkouts and accepts clones and worktrees"
+echo "OK: mapping verifier rejects missing, invalid, and empty checkouts and accepts clones and worktrees"

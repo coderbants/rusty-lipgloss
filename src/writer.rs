@@ -200,7 +200,9 @@ pub fn downsample_sgr(s: &str, profile: Profile) -> String {
                 out.push_str(&rest[..pos]);
                 rest = &rest[pos..];
                 if !rest.starts_with("\x1b[") {
-                    break;
+                    out.push('\x1b');
+                    rest = &rest[1..];
+                    continue;
                 }
                 // Find the terminating byte.
                 let bytes = rest.as_bytes();
@@ -770,6 +772,13 @@ mod tests {
     fn test_downsample_sgr_preserves_non_csi_and_incomplete_tails_once() {
         let hyperlink = "\x1b]8;;https://example.com\x1b\\example\x1b]8;;\x1b\\";
         assert_eq!(downsample_sgr(hyperlink, Profile::Ansi256), hyperlink);
+
+        let hyperlink_then_truecolor =
+            "\x1b]8;;https://example.com\x07example\x1b]8;;\x07 \x1b[38;2;255;0;0mred\x1b[m";
+        assert_eq!(
+            downsample_sgr(hyperlink_then_truecolor, Profile::Ansi256),
+            "\x1b]8;;https://example.com\x07example\x1b]8;;\x07 \x1b[38;5;196mred\x1b[m"
+        );
 
         let incomplete_csi = "prefix\x1b[38;2;255";
         assert_eq!(
