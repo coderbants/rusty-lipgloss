@@ -37,6 +37,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.98.0
         with:
           components: clippy, rustfmt
+      - name: Verify candidate CI trust boundary
+        run: node scripts/verify_ci_candidate_boundary.mjs
       - name: Configure shared Cargo cache
         run: |
           # The runner image pre-sets CARGO_HOME=$HOME/.cargo; drop the
