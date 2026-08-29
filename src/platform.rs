@@ -10,6 +10,8 @@
 //! Internal maintainer note: this crate denies unsafe Rust, so native Win32
 //! console mode changes must not be reintroduced as handwritten FFI. Add a
 //! reviewed safe adapter before changing the Windows behavior.
+//!
+//! The Windows regression behavior is exercised by tests/platform_test.rs.
 
 /// <upstream-comment>EnableLegacyWindowsANSI enables support for ANSI color sequences in the
 /// Windows default console (cmd.exe and the PowerShell application). Note that
