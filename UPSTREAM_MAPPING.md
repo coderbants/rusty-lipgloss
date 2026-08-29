@@ -175,3 +175,6 @@ fixtures:
 - Tree includes offsets, hiding, auto-nesting of root-less children, custom enumerators/indenters/style funcs, and the exact renderer dance for multiline prefixes.
 - Canvas/Layer/Compositor implement the ultraviolet `Screen`/`Drawable` model: cell buffers, z-ordering, hit testing, ID indexing, and render.
 - Writer implements profile detection (`NO_COLOR`/`COLORTERM`/`TERM`) and SGR downsampling (TrueColor -> ANSI256 -> ANSI16).
+## Windows regression coverage
+
+`tests/platform_test.rs` exercises the public Windows ANSI entry point against the compile-safe no-op boundary documented in `src/platform.rs`. Native console mode changes remain deferred until a reviewed safe adapter is available.
